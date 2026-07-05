@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "expo-router-sticky-tabs": ["../src/index"],
+      "expo-router-sticky-tabs/*": ["../src/*"]
+    }
+  }
+}

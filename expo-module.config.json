@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ExpoRouterStickyTabsModule"]
+  },
+  "android": {
+    "modules": ["com.adraheem.exporouterstickytabs.ExpoRouterStickyTabsModule"]
+  }
+}
