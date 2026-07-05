@@ -89,4 +89,13 @@ describe('indicator interpolation', () => {
     expect(indicatorX(0.5, [])).toBe(0);
     expect(indicatorWidth(0.5, [])).toBe(0);
   });
+
+  it('does not crash on a partially-measured (sparse) layout array', () => {
+    // Tabs measure one at a time, so entries can be undefined mid-measure.
+    const partial = [undefined, undefined, { x: 220, width: 80 }] as unknown as typeof layouts;
+    expect(() => indicatorX(1, partial)).not.toThrow();
+    expect(() => indicatorWidth(1, partial)).not.toThrow();
+    expect(indicatorX(2, partial)).toBe(220);
+    expect(indicatorWidth(2, partial)).toBe(80);
+  });
 });

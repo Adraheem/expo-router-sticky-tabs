@@ -25,6 +25,11 @@ export interface TabsContextValue {
   setPage: (index: number) => void;
   /** Register the pager's imperative `setPage`, called by `<Tabs.Slot />`. */
   registerPager: (setPage: (index: number) => void) => void;
+  /**
+   * Report the pager's settled index (from a swipe) so the router→pager sync
+   * effect does not redundantly re-animate the pager to where it already is.
+   */
+  notifyPagerIndex: (index: number) => void;
 }
 
 export const TabsContext = createContext<TabsContextValue | null>(null);

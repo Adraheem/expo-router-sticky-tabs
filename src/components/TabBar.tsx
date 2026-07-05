@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -7,7 +7,7 @@ import {
   type LayoutChangeEvent,
   type ColorValue,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
 import { useStore } from 'zustand';
 
 import { useCollapsibleHeader } from '../hooks/useCollapsibleHeader';
@@ -48,15 +48,18 @@ export function TabBar(props: TabBarProps): ReactNode {
 
   const headerHeight = useStore(headerStore, (s) => s.headerHeight);
 
+  // Accumulate measurements in a stable plain-JS array. Reading back through the
+  // shared value on every onLayout is unreliable — the getter does not always
+  // reflect the immediately-prior write, so tabs would clobber each other and
+  // only the last-measured tab would survive. A JS accumulator is deterministic;
+  // we push a dense snapshot to the shared value for the indicator to read.
+  const [measurements] = useState<{ layouts: TabLayout[] }>(() => ({ layouts: [] }));
   const setTabLayout = useCallback(
     (index: number, layout: TabLayout) => {
-      // Read/write through the shared value (not a React ref) so the indicator
-      // sees measurements immediately on the UI thread.
-      const next = shared.tabLayouts.value.slice();
-      next[index] = { x: layout.x, width: layout.width };
-      shared.tabLayouts.value = next;
+      measurements.layouts[index] = { x: layout.x, width: layout.width };
+      shared.tabLayouts.value = measurements.layouts.slice();
     },
-    [shared]
+    [shared, measurements]
   );
 
   const onBarLayout = useCallback(
@@ -123,7 +126,9 @@ export function TabBar(props: TabBarProps): ReactNode {
             ]}>
             <TabContent
               tab={tab}
-              color={isFocused ? activeColor : inactiveColor}
+              isFocused={isFocused}
+              activeColor={activeColor}
+              inactiveColor={inactiveColor}
               labelStyle={labelStyle}
             />
           </Pressable>
@@ -159,21 +164,46 @@ TabBar.displayName = 'Tabs.TabBar';
 
 function TabContent({
   tab,
-  color,
+  isFocused,
+  activeColor,
+  inactiveColor,
   labelStyle,
 }: {
   tab: RegisteredTab;
-  color: ColorValue;
+  isFocused: boolean;
+  activeColor: ColorValue;
+  inactiveColor: ColorValue;
   labelStyle: TabBarProps['labelStyle'];
 }) {
+  const { shared } = useTabsContext();
+  const { pagerPosition } = shared;
   const Icon = tab.options.icon;
   const badge = tab.options.badge;
+
+  // Interpolate the label colour from the continuous pager position on the UI
+  // thread, so the active tab transitions smoothly as you swipe — no discrete
+  // flip, no React re-render.
+  const labelColorStyle = useAnimatedStyle(() => {
+    const i = tab.index;
+    return {
+      color: interpolateColor(
+        pagerPosition.value,
+        [i - 1, i, i + 1],
+        [String(inactiveColor), String(activeColor), String(inactiveColor)]
+      ),
+    };
+  }, [tab.index, activeColor, inactiveColor]);
+
+  // Icons are arbitrary components that take a plain colour, so they still use
+  // the discrete focused state.
+  const iconColor = isFocused ? activeColor : inactiveColor;
+
   return (
     <View style={styles.tabContent}>
-      {Icon ? <Icon focused color={color} size={22} /> : null}
-      <Text style={[styles.label, { color }, labelStyle]} numberOfLines={1}>
+      {Icon ? <Icon focused={isFocused} color={iconColor} size={22} /> : null}
+      <Animated.Text style={[styles.label, labelStyle, labelColorStyle]} numberOfLines={1}>
         {tab.options.title}
-      </Text>
+      </Animated.Text>
       {badge != null && badge !== 0 ? (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{badge}</Text>

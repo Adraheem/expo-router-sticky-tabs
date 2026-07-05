@@ -65,19 +65,21 @@ export function interpolatePosition(position: number, values: number[], fallback
 /** Interpolated left edge of the indicator for a continuous pager position. */
 export function indicatorX(position: number, layouts: TabLayout[]): number {
   'worklet';
-  return interpolatePosition(
-    position,
-    layouts.map((l) => l.x),
-    0
-  );
+  // Tabs measure one at a time, so `layouts` may briefly contain holes; guard
+  // each access so the worklet never dereferences an undefined entry.
+  const xs: number[] = [];
+  for (let i = 0; i < layouts.length; i++) {
+    xs.push(layouts[i] ? layouts[i].x : 0);
+  }
+  return interpolatePosition(position, xs, 0);
 }
 
 /** Interpolated width of the indicator for a continuous pager position. */
 export function indicatorWidth(position: number, layouts: TabLayout[]): number {
   'worklet';
-  return interpolatePosition(
-    position,
-    layouts.map((l) => l.width),
-    0
-  );
+  const widths: number[] = [];
+  for (let i = 0; i < layouts.length; i++) {
+    widths.push(layouts[i] ? layouts[i].width : 0);
+  }
+  return interpolatePosition(position, widths, 0);
 }

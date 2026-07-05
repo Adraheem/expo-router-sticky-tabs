@@ -4,20 +4,23 @@ const path = require('path');
 
 const config = getDefaultConfig(__dirname);
 
-// npm v7+ will install ../node_modules/react and ../node_modules/react-native because of peerDependencies.
-// To prevent the incompatible react-native between ./node_modules/react-native and ../node_modules/react-native,
-// excludes the one from the parent folder when bundling.
+// The library root has its OWN node_modules (it installs React, Expo Router,
+// Reanimated, etc. as dev/peer deps to build + test the library). Because the
+// library is symlinked in from `..`, Metro would otherwise resolve those shared
+// packages from the root copy — creating a SECOND copy of React/Expo Router with
+// separate context instances. That breaks context-based hooks (e.g. Expo
+// Router's `useContextKey` → "No filename found") and Reanimated/Fast Refresh.
+//
+// Fix: block the entire root node_modules so every dependency resolves from the
+// example's single copy. The library itself is resolved via `extraNodeModules`
+// (it points at `..`, not `../node_modules`), so it is unaffected.
 config.resolver.blockList = [
   ...Array.from(config.resolver.blockList ?? []),
-  // On windows the path will resolve with `\`. We need to escape it with `\\` for the RegExp.
-  new RegExp(path.resolve('..', 'node_modules', 'react').replace(/\\/g, '\\\\')),
-  new RegExp(path.resolve('..', 'node_modules', 'react-native').replace(/\\/g, '\\\\')),
+  // On windows the path resolves with `\`; escape it to `\\` for the RegExp.
+  new RegExp(`${path.resolve('..', 'node_modules').replace(/\\/g, '\\\\')}\\/.*`),
 ];
 
-config.resolver.nodeModulesPaths = [
-  path.resolve(__dirname, './node_modules'),
-  path.resolve(__dirname, '../node_modules'),
-];
+config.resolver.nodeModulesPaths = [path.resolve(__dirname, './node_modules')];
 
 config.resolver.extraNodeModules = {
   'expo-router-sticky-tabs': '..',

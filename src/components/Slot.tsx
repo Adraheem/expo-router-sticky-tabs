@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-import PagerView, { type PagerViewOnPageSelectedEvent } from 'react-native-pager-view';
+import PagerView, {
+  type PagerViewOnPageSelectedEvent,
+  type PageScrollStateChangedNativeEvent,
+} from 'react-native-pager-view';
 import Animated from 'react-native-reanimated';
 
 import { usePagerScrollHandler } from '../hooks/usePagerScrollHandler';
@@ -26,7 +29,7 @@ export interface SlotProps {
  */
 export function Slot(props: SlotProps) {
   const { style, swipeEnabled = true, overdrag = false } = props;
-  const { shared, registerPager, pagerStore } = useTabsContext();
+  const { shared, registerPager, notifyPagerIndex, pagerStore } = useTabsContext();
   const { state, descriptors, switchTab } = useRouterState();
 
   const pagerRef = useRef<ComponentRef<typeof PagerView>>(null);
@@ -50,26 +53,43 @@ export function Slot(props: SlotProps) {
     setLoaded((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
   }, []);
 
-  const onSwipeSettled = useCallback(
-    (index: number) => {
-      const route = routes[index];
-      if (!route) return;
-      markLoaded(route.key);
-      // Only tell the router if the swipe actually changed the focused tab.
-      if (index !== state.index) {
-        switchTab(route.name);
-      }
-      pagerStore.getState().setTargetIndex(index);
-      pagerStore.getState().setSettling(false);
-    },
-    [routes, state.index, switchTab, markLoaded, pagerStore]
-  );
+  // The page the pager has landed on but not yet committed to Expo Router.
+  const pendingIndexRef = useRef<number | null>(null);
 
   const onPageSelected = useCallback(
     (e: PagerViewOnPageSelectedEvent) => {
-      onSwipeSettled(e.nativeEvent.position);
+      const index = e.nativeEvent.position;
+      const route = routes[index];
+      if (!route) return;
+      markLoaded(route.key);
+      // Record the pager's landed index so the provider's sync effect won't
+      // re-animate the pager back to it.
+      notifyPagerIndex(index);
+      pagerStore.getState().setTargetIndex(index);
+      // Defer the actual Expo Router navigation until the pager is idle — this
+      // event can fire mid-swipe (crossing the page boundary), and running the
+      // navigation re-render then stalls the frames driving the gesture.
+      pendingIndexRef.current = index;
     },
-    [onSwipeSettled]
+    [routes, markLoaded, notifyPagerIndex, pagerStore]
+  );
+
+  const onPageScrollStateChanged = useCallback(
+    (e: PageScrollStateChangedNativeEvent) => {
+      const scrollState = e.nativeEvent.pageScrollState;
+      pagerStore.getState().setDragging(scrollState === 'dragging');
+      pagerStore.getState().setSettling(scrollState === 'settling');
+      if (scrollState !== 'idle') return;
+      // The settle animation has finished — safe to re-render for navigation.
+      const index = pendingIndexRef.current;
+      pendingIndexRef.current = null;
+      if (index == null) return;
+      const route = routes[index];
+      if (route && index !== state.index) {
+        switchTab(route.name);
+      }
+    },
+    [routes, state.index, switchTab, pagerStore]
   );
 
   // Drive the continuous pager position on the UI thread.
@@ -93,7 +113,8 @@ export function Slot(props: SlotProps) {
       overdrag={overdrag}
       offscreenPageLimit={Math.max(1, routes.length)}
       onPageScroll={pagerScrollHandler as never}
-      onPageSelected={onPageSelected}>
+      onPageSelected={onPageSelected}
+      onPageScrollStateChanged={onPageScrollStateChanged}>
       {routes.map((route, index) => {
         const descriptor = descriptors[route.key];
         const isFocused = index === activeIndex;

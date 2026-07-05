@@ -32,14 +32,16 @@ export function Indicator(props: IndicatorProps): ReactNode {
 
   const animatedStyle = useAnimatedStyle(() => {
     const layouts = tabLayouts.value;
-    if (layouts.length === 0) {
+    const count = layouts.length;
+    const pos = position.value;
+    const idx = count > 0 ? Math.round(clamp(pos, 0, count - 1)) : 0;
+    // Stay hidden until the active tab's geometry has actually been measured
+    // (tabs report their layout one at a time).
+    if (count === 0 || !layouts[idx]) {
       return { opacity: 0, width: 0, transform: [{ translateX: 0 }] };
     }
-    const pos = position.value;
     const x = indicatorX(pos, layouts);
-    const width = interpolateWidth
-      ? indicatorWidth(pos, layouts)
-      : layouts[Math.round(clamp(pos, 0, layouts.length - 1))].width;
+    const width = interpolateWidth ? indicatorWidth(pos, layouts) : layouts[idx].width;
 
     const base = { opacity: 1, width, transform: [{ translateX: x }] };
     if (colors && colors.length >= 2) {

@@ -124,6 +124,11 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     lastPagerIndexRef.current = index;
     pagerSetPageRef.current?.(index);
   }, []);
+  // The pager already moved itself (swipe): record its index so the sync effect
+  // below does not command a redundant re-animation to the same page.
+  const notifyPagerIndex = useCallback((index: number) => {
+    lastPagerIndexRef.current = index;
+  }, []);
 
   // ---- Stable switchTab that always calls the latest router fn. ------------
   const routerSwitchTabRef = useRef(routerSwitchTab);
@@ -159,8 +164,19 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
       switchTab,
       setPage,
       registerPager,
+      notifyPagerIndex,
     }),
-    [tabStore, pagerStore, headerStore, scrollStore, shared, switchTab, setPage, registerPager]
+    [
+      tabStore,
+      pagerStore,
+      headerStore,
+      scrollStore,
+      shared,
+      switchTab,
+      setPage,
+      registerPager,
+      notifyPagerIndex,
+    ]
   );
 
   const routerState = useMemo<RouterStateValue>(
