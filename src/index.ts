@@ -1,4 +1,73 @@
-// Reexport the native module. On web, it will be resolved to ExpoRouterStickyTabsModule.web.ts
-// and on native platforms to ExpoRouterStickyTabsModule.ts
-export { default } from './ExpoRouterStickyTabsModule';
-export * from './ExpoRouterStickyTabs.types';
+// ─── Primary API ─────────────────────────────────────────────────────────────
+export { Tabs } from './Tabs';
+
+// ─── Individual components (named, for tree-shaking + custom composition) ─────
+export { TabsRoot } from './components/TabsRoot';
+export { Screen } from './components/Screen';
+export { Header } from './components/Header';
+export { TabBar } from './components/TabBar';
+export { Indicator } from './components/Indicator';
+export { Slot } from './components/Slot';
+export { Lazy } from './components/Lazy';
+export { Group } from './components/Group';
+export { TabsScrollView } from './lists/ScrollView';
+export { TabsFlatList } from './lists/FlatList';
+export { TabsSectionList } from './lists/SectionList';
+export { TabsFlashList } from './lists/FlashList';
+
+// ─── Hooks ───────────────────────────────────────────────────────────────────
+export { useTabs } from './hooks/useTabs';
+export { useCurrentTab } from './hooks/useCurrentTab';
+export { usePager } from './hooks/usePager';
+export { useHeader } from './hooks/useHeader';
+export { useIndicator } from './hooks/useIndicator';
+export { useScrollSync } from './hooks/useScrollSync';
+export { useTabMeasurements } from './hooks/useTabMeasurements';
+export { useCollapsibleHeader } from './hooks/useCollapsibleHeader';
+export { useTabsContext } from './provider/context';
+export { useTabScreen } from './provider/screenContext';
+
+// ─── Math utilities (worklet-safe, useful for custom animations) ─────────────
+export {
+  clamp,
+  collapsibleDistance,
+  collapseProgress,
+  headerTranslateY,
+  interpolatePosition,
+  indicatorX,
+  indicatorWidth,
+} from './utils/math';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+export type {
+  TabName,
+  TabIcon,
+  TabScreenOptions,
+  TabScreenListeners,
+  TabScreenProps,
+  RegisteredTab,
+  TabLayout,
+  HeaderConfig,
+  HeaderProps,
+  TabBarProps,
+  RenderTabProps,
+  IndicatorProps,
+  IndicatorRenderProps,
+  TabsProviderOptions,
+  TabsSharedValues,
+} from './types';
+export type { TabsRootProps } from './components/TabsRoot';
+export type { SlotProps } from './components/Slot';
+export type { LazyProps } from './components/Lazy';
+export type { GroupProps } from './components/Group';
+export type { TabsScrollViewProps } from './lists/ScrollView';
+export type { TabsFlatListProps } from './lists/FlatList';
+export type { TabsSectionListProps } from './lists/SectionList';
+export type { TabsFlashListProps } from './lists/FlashList';
+export type { UseTabsResult } from './hooks/useTabs';
+export type { UseCurrentTabResult } from './hooks/useCurrentTab';
+export type { UsePagerResult } from './hooks/usePager';
+export type { UseHeaderResult } from './hooks/useHeader';
+export type { UseIndicatorResult } from './hooks/useIndicator';
+export type { ScrollSync } from './hooks/useScrollSync';
+export type { CollapsibleHeader } from './hooks/useCollapsibleHeader';

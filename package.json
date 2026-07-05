@@ -1,55 +1,131 @@
 {
   "name": "expo-router-sticky-tabs",
   "version": "0.1.0",
-  "description": "A headless sticky header and swipeable top tabs library for Expo Router.",
+  "description": "Instagram-quality sticky headers, collapsible layouts and swipeable top tabs for Expo Router. Headless, Reanimated-powered, New Architecture ready.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "build",
+    "src",
+    "!**/__tests__",
+    "!**/__mocks__",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
-    "build": "node internal/module_scripts/build.js",
-    "clean": "node internal/module_scripts/clean.js",
-    "lint": "eslint src/",
-    "test": "node internal/module_scripts/test.js",
-    "prepare": "node internal/module_scripts/prepare.js",
-    "open:ios": "node internal/module_scripts/open-ios.js",
-    "open:android": "node internal/module_scripts/open-android.js"
+    "build": "expo-module tsc",
+    "clean": "expo-module clean",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "prepare": "expo-module tsc",
+    "prepublishOnly": "expo-module tsc"
   },
   "keywords": [
     "react-native",
     "expo",
-    "expo-router-sticky-tabs",
-    "ExpoRouterStickyTabs"
+    "expo-router",
+    "sticky-tabs",
+    "collapsible-header",
+    "swipeable-tabs",
+    "top-tabs",
+    "tab-view",
+    "reanimated",
+    "instagram-tabs"
   ],
-  "repository": "https://github.com/Adraheem/expo-router-sticky-tabs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Adraheem/expo-router-sticky-tabs"
+  },
   "bugs": {
     "url": "https://github.com/Adraheem/expo-router-sticky-tabs/issues"
   },
   "author": "Raheem Adebayo <adraheemzy@gmail.com> (Adraheem)",
   "license": "MIT",
   "homepage": "https://github.com/Adraheem/expo-router-sticky-tabs#readme",
-  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@react-native/jest-preset": "^0.86.0",
+    "@shopify/flash-list": "2.0.2",
+    "@testing-library/react-native": "^13.0.0",
     "@types/jest": "^29.2.1",
     "@types/react": "~19.2.4",
     "babel-preset-expo": "~57.0.0",
     "eslint": "~9.39.4",
     "eslint-config-universe": "^15.0.3",
     "expo": "^57.0.2",
+    "expo-module-scripts": "^5.0.0",
+    "expo-router": "~57.0.3",
     "jest": "^29.7.0",
     "jest-expo": "~57.0.1",
     "prettier": "^3.0.0",
+    "react": "19.2.3",
     "react-native": "0.86.0",
-    "typescript": "~6.0.3"
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-pager-view": "8.0.2",
+    "react-native-reanimated": "4.5.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-worklets": "0.10.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "typescript": "~6.0.3",
+    "zustand": "^5.0.14"
   },
-  "jest": {
-    "preset": "jest-expo",
-    "roots": [
-      "<rootDir>/src"
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings 0",
+      "prettier --write"
     ]
   },
   "peerDependencies": {
+    "@shopify/flash-list": ">=1.6.0",
     "expo": "*",
-    "react": "*",
-    "react-native": "*"
+    "expo-router": ">=3.5.0",
+    "react": ">=18.2.0",
+    "react-native": ">=0.74.0",
+    "react-native-gesture-handler": ">=2.16.0",
+    "react-native-pager-view": ">=6.3.0",
+    "react-native-reanimated": ">=3.10.0",
+    "react-native-safe-area-context": ">=4.9.0",
+    "react-native-screens": ">=3.30.0",
+    "zustand": ">=4.5.0"
+  },
+  "peerDependenciesMeta": {
+    "@shopify/flash-list": {
+      "optional": true
+    }
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "transform": {
+      "^.+\\.[jt]sx?$": [
+        "babel-jest",
+        {
+          "presets": [
+            "babel-preset-expo"
+          ]
+        }
+      ]
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(zustand))"
+    ]
   }
 }
