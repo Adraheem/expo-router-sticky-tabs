@@ -175,8 +175,13 @@ export interface TabsProviderOptions {
  * context so consumers never re-render when they change.
  */
 export interface TabsSharedValues {
-  /** Live scroll offset of the focused tab (drives the header). */
-  scrollY: SharedValue<number>;
+  /**
+   * The shared collapse amount ∈ `[0, collapsibleDistance]` and the single
+   * source of truth for the header/tab-bar transform. Written **only** by the
+   * focused list's scroll worklet — never by a tab switch, `setPage`, deep link
+   * or route restore. This is what makes changing tabs leave the header alone.
+   */
+  headerOffset: SharedValue<number>;
   /** Settled active tab index (integer). */
   activeIndex: SharedValue<number>;
   /** Continuous pager position (`index + fraction`) during a swipe. */

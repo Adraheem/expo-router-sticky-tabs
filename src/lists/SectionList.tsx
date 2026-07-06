@@ -27,11 +27,13 @@ function TabsSectionListInner<ItemT, SectionT = DefaultSectionT>(
   props: TabsSectionListProps<ItemT, SectionT>,
   ref: ForwardedRef<SectionList<ItemT, SectionT>>
 ) {
-  const { scrollHandler, animatedRef, topInset, scrollEventThrottle } = useScrollSync();
+  const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
+    useScrollSync();
   return (
     <AnimatedSectionList
       ref={mergeRefs(ref, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
+      contentOffset={{ x: 0, y: initialOffset }}
       {...(props as unknown as SectionListProps<unknown, DefaultSectionT>)}
       onScroll={scrollHandler}
       contentContainerStyle={[{ paddingTop: topInset }, props.contentContainerStyle]}

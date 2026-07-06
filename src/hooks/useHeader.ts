@@ -11,8 +11,12 @@ export interface UseHeaderResult {
   tabBarHeight: number;
   /** Resolved header behaviour config. */
   config: HeaderConfig;
-  /** Focused tab's live scroll offset. UI-thread shared value. */
-  scrollY: SharedValue<number>;
+  /**
+   * The shared collapse amount ∈ `[0, collapsibleDistance]` driving the header.
+   * UI-thread shared value; unaffected by tab switches (only vertical scrolling
+   * moves it). Replaces the old per-tab `scrollY`.
+   */
+  headerOffset: SharedValue<number>;
   /** Header height as a shared value. */
   headerHeight: SharedValue<number>;
   /** Collapsed (minimum) header height as a shared value. */
@@ -29,7 +33,7 @@ export function useHeader(): UseHeaderResult {
     height,
     tabBarHeight,
     config,
-    scrollY: shared.scrollY,
+    headerOffset: shared.headerOffset,
     headerHeight: shared.headerHeight,
     minHeaderHeight: shared.minHeaderHeight,
   };

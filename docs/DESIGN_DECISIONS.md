@@ -55,13 +55,32 @@ Four single-responsibility zustand stores plus a set of Reanimated shared values
 - `pagerStore` — page count, target index, drag/settle flags.
 - `headerStore` — measured heights + resolved header config.
 - `scrollStore` — per-tab live offset (shared value) + imperative `scrollToOffset`.
-- Shared values — `scrollY`, `activeIndex`, `pagerPosition`, `headerHeight`, `tabBarHeight`, `minHeaderHeight`, `tabLayouts`, `reducedMotion`.
+- Shared values — `headerOffset`, `activeIndex`, `pagerPosition`, `headerHeight`, `tabBarHeight`, `minHeaderHeight`, `tabLayouts`, `reducedMotion`.
 
-The context value identity is stable, so scroll/swipe never re-render consumers. Header position, indicator and sticky state derive from just two inputs on the UI thread: `activeIndex` and the focused tab's `scrollY`.
+The context value identity is stable, so scroll/swipe never re-render consumers. The header, indicator and sticky state derive on the UI thread from `headerOffset` — **shared layout state with a single writer** (the focused list's scroll worklet), never a per-tab offset. Per-tab offsets live in `scrollStore`; the scroll coordinator reconciles them to `headerOffset` but never the reverse.
+
+## The header belongs to the layout, not the active tab
+
+The header, tab bar and collapse state are **shared layout**, owned once by the container. Individual
+tabs own only their content + scroll position. These two systems talk through a synchronization layer
+(`headerOffset` + the coordinator), not by reading each other's state:
+
+- **Only genuine vertical scrolling** of the focused tab moves `headerOffset`. Changing tabs, swiping,
+  deep-linking, restoring routes and lazy-mounting cannot — by construction, they never run the writer.
+- On any tab change/reveal the coordinator pins the incoming tab to `max(ownOffset, headerOffset)`, so a
+  tab that is "behind" the collapse sits directly under the collapsed bar instead of forcing the header
+  to expand.
+
+An earlier version derived the header from the active tab's `scrollY` and *rewrote that driver on every
+tab switch*. That made switching to a less-scrolled tab expand the header — a jump the user never asked
+for. Giving the header its own single-writer shared value removes the whole class of bug (deep links,
+restore, lazy mount, programmatic nav), not just the one scenario.
 
 ## Scroll restoration
 
-Because the pager keeps every tab mounted (`react-native-screens`), each list retains its native scroll offset for free. We only restore the **header driver** shared value on tab change (reading the newly focused tab's last offset), so the header snaps to the correct collapse state — matching Instagram exactly, with a single shared-value write per switch.
+Because the pager keeps every tab mounted (`react-native-screens`), each list retains its native scroll offset for free — so a tab scrolled to 1000 returns to 1000 exactly, with no work from us. On a tab switch we do **not** touch `headerOffset`; the coordinator instead pins the incoming tab up to the current collapse when it is behind it (`syncedTabOffset(own, headerOffset) = max(own, headerOffset)`). This reconciles the two requirements that are only in tension for a tab sitting behind a collapsed header: exact per-tab restoration holds in the content region (offset ≥ collapse), while the collapse region is shared, so a short/fresh tab is pinned under the collapsed bar (matching Instagram / X / Threads) rather than expanding the header. Pulling that tab back down re-expands the header naturally, since its offset re-enters `[0, collapsibleDistance]`.
+
+Lazy tabs that first mount while collapsed seed their initial `contentOffset` from `headerOffset`, so their first paint is already pinned — no expand-then-collapse flash.
 
 ## Roadmap
 

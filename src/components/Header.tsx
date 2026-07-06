@@ -10,7 +10,7 @@ import type { HeaderProps } from '../types';
 
 /**
  * `<Tabs.Header />` — the collapsible, sticky region above the tab bar. It is an
- * absolutely-positioned overlay driven entirely by the shared `scrollY`; the
+ * absolutely-positioned overlay driven entirely by the shared `headerOffset`; the
  * lists below add matching top padding so nothing is obscured.
  */
 export function Header(props: HeaderProps): ReactNode {

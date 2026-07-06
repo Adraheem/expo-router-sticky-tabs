@@ -9,6 +9,7 @@ import {
   type TabNavState,
   type TabRouteDescriptor,
 } from './routerState';
+import { useScrollCoordinator } from '../hooks/useScrollCoordinator';
 import { createHeaderStore } from '../stores/headerStore';
 import { createPagerStore } from '../stores/pagerStore';
 import { createScrollStore } from '../stores/scrollStore';
@@ -60,7 +61,9 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
   }));
 
   // ---- Shared values: the animation source of truth. ----------------------
-  const scrollY = useSharedValue(0);
+  // The shared collapse driver. Written ONLY by the focused list's scroll
+  // worklet (see useScrollSync); never by a tab switch / setPage / router sync.
+  const headerOffset = useSharedValue(0);
   const activeIndex = useSharedValue(state.index);
   const pagerPosition = useSharedValue(state.index);
   const headerHeight = useSharedValue(0);
@@ -71,7 +74,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
 
   const shared = useMemo<TabsSharedValues>(
     () => ({
-      scrollY,
+      headerOffset,
       activeIndex,
       pagerPosition,
       headerHeight,
@@ -82,7 +85,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     }),
     // shared values are stable refs; build the container once.
     [
-      scrollY,
+      headerOffset,
       activeIndex,
       pagerPosition,
       headerHeight,
@@ -137,21 +140,31 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
   }, [routerSwitchTab]);
   const switchTab = useCallback((name: TabName) => routerSwitchTabRef.current(name), []);
 
+  // ---- Scroll coordinator: reconciles tabs TO the shared header. ----------
+  const { syncTabToHeader } = useScrollCoordinator({
+    scrollStore,
+    pagerStore,
+    tabStore,
+    headerStore,
+    headerOffset,
+  });
+
   // ---- Router state → animated layer (runs on every navigation change). ----
   const activeName = state.routes[state.index]?.name ?? null;
   useEffect(() => {
     if (activeName == null) return;
     tabStore.getState().setActive(activeName, state.index);
     activeIndex.value = state.index;
-    // Restore the newly focused tab's collapse state from its saved offset.
-    const entry = scrollStore.getState().tabs[activeName];
-    scrollY.value = entry ? entry.lastOffset.value : 0;
+    // Reconcile the newly-focused tab TO the shared header collapse — pin it
+    // under the collapsed bar if it is behind. We deliberately do NOT write the
+    // header from the tab's offset: switching tabs must never move the header.
+    syncTabToHeader(activeName);
     // Keep the pager in sync when navigation was driven externally (deep link,
     // tab press, back button) rather than by a swipe we already settled.
     if (lastPagerIndexRef.current !== state.index) {
       setPage(state.index);
     }
-  }, [activeName, state.index, tabStore, scrollStore, activeIndex, scrollY, setPage]);
+  }, [activeName, state.index, tabStore, activeIndex, syncTabToHeader, setPage]);
 
   // ---- Context values. ----------------------------------------------------
   const tabsContext = useMemo<TabsContextValue>(
@@ -165,6 +178,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
       setPage,
       registerPager,
       notifyPagerIndex,
+      syncTabToHeader,
     }),
     [
       tabStore,
@@ -176,6 +190,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
       setPage,
       registerPager,
       notifyPagerIndex,
+      syncTabToHeader,
     ]
   );
 

@@ -17,17 +17,20 @@ export interface CollapsibleHeader {
 }
 
 /**
- * Derives the collapsible header animation from the shared `scrollY` on the UI
- * thread. Consumed by `<Tabs.Header />` and `<Tabs.TabBar />` so they translate
- * together and the tab bar sticks once the header is fully collapsed.
+ * Derives the collapsible header animation from the shared `headerOffset` on the
+ * UI thread. Consumed by `<Tabs.Header />` and `<Tabs.TabBar />` so they
+ * translate together and the tab bar sticks once the header is fully collapsed.
+ *
+ * It reads only `headerOffset` — never any per-tab offset — so the header is a
+ * pure function of the shared collapse state and is unaffected by tab switches.
  */
 export function useCollapsibleHeader(): CollapsibleHeader {
   const { shared, headerStore } = useTabsContext();
-  const { scrollY, headerHeight, minHeaderHeight, reducedMotion } = shared;
+  const { headerOffset, headerHeight, minHeaderHeight, reducedMotion } = shared;
   const config = useStore(headerStore, (s) => s.config);
 
   const progress = useDerivedValue(() =>
-    collapseProgress(scrollY.value, headerHeight.value, minHeaderHeight.value)
+    collapseProgress(headerOffset.value, headerHeight.value, minHeaderHeight.value)
   );
 
   const collapsible = config.collapsible;
@@ -39,7 +42,13 @@ export function useCollapsibleHeader(): CollapsibleHeader {
     }
     return {
       transform: [
-        { translateY: headerTranslateY(scrollY.value, headerHeight.value, minHeaderHeight.value) },
+        {
+          translateY: headerTranslateY(
+            headerOffset.value,
+            headerHeight.value,
+            minHeaderHeight.value
+          ),
+        },
       ],
     };
   }, [collapsible]);
@@ -48,13 +57,13 @@ export function useCollapsibleHeader(): CollapsibleHeader {
     if (reducedMotion.value === 1) {
       return { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] };
     }
-    const p = progress.value;
     if (parallax) {
+      const p = progress.value;
       // Content drifts up at half speed and fades as the header collapses.
-      const drift = clamp(scrollY.value, 0, headerHeight.value) * 0.5;
+      const drift = clamp(headerOffset.value, 0, headerHeight.value) * 0.5;
       return { opacity: 1 - p * 0.85, transform: [{ translateY: drift }, { scale: 1 }] };
     }
-    return { opacity: 1 - p * 0.6, transform: [{ translateY: 0 }, { scale: 1 }] };
+    return { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] };
   }, [parallax]);
 
   return { translateStyle, parallaxStyle, progress, config };

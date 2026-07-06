@@ -14,11 +14,13 @@ export type TabsScrollViewProps = ScrollViewProps;
  */
 export const TabsScrollView = forwardRef<Animated.ScrollView, TabsScrollViewProps>(
   function TabsScrollView(props, ref) {
-    const { scrollHandler, animatedRef, topInset, scrollEventThrottle } = useScrollSync();
+    const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
+      useScrollSync();
     return (
       <Animated.ScrollView
         ref={mergeRefs(ref, animatedRef as never)}
         scrollEventThrottle={scrollEventThrottle}
+        contentOffset={{ x: 0, y: initialOffset }}
         {...props}
         onScroll={scrollHandler}
         contentContainerStyle={[{ paddingTop: topInset }, props.contentContainerStyle]}

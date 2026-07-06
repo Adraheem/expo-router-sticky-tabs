@@ -1,5 +1,25 @@
 # Migration guide
 
+## Upgrading within `expo-router-sticky-tabs`
+
+### `scrollY` → `headerOffset` (breaking)
+
+The shared value that drives the header was renamed and re-scoped. Previously `scrollY` was the
+focused tab's raw offset and *also* the header driver, which meant switching to a less-scrolled tab
+expanded the header. It is replaced by **`headerOffset`**: the shared collapse amount ∈
+`[0, collapsibleDistance]`, owned by the layout and moved only by genuine vertical scrolling.
+
+```diff
+- const { scrollY } = useHeader();
+- // scrollY: raw offset of whichever tab is focused; changed on every tab switch
++ const { headerOffset } = useHeader();
++ // headerOffset: shared collapse ∈ [0, collapsibleDistance]; unaffected by tab switches
+```
+
+The same field renamed on the `TabsSharedValues` type (`shared.scrollY` → `shared.headerOffset`). If
+you need a specific tab's raw scroll offset, read it from `useScrollSync` inside that tab instead.
+There are no other public API changes.
+
 ## From `react-native-collapsible-tab-view`
 
 Both give you a collapsible header + swipeable tabs. The key difference: **here each tab is a real Expo Router route**, not an inline component.
@@ -9,7 +29,7 @@ Both give you a collapsible header + swipeable tabs. The key difference: **here 
 | `<Tabs.Container renderHeader>` | `<Tabs><Tabs.Header>…</Tabs.Header>` |
 | `<Tabs.Tab name="…">` with inline children | `<Tabs.Screen name href>` + a route file (`name.tsx`) |
 | `<Tabs.FlatList>` | `<Tabs.FlatList>` (same idea, auto-synced) |
-| `useCurrentTabScrollY` | `useHeader().scrollY` / `useScrollSync` |
+| `useCurrentTabScrollY` | `useHeader().headerOffset` / `useScrollSync` |
 | Tab bar via `renderTabBar` | `<Tabs.TabBar renderTab>` |
 
 Steps:

@@ -29,7 +29,7 @@ export interface SlotProps {
  */
 export function Slot(props: SlotProps) {
   const { style, swipeEnabled = true, overdrag = false } = props;
-  const { shared, registerPager, notifyPagerIndex, pagerStore } = useTabsContext();
+  const { shared, registerPager, notifyPagerIndex, pagerStore, syncTabToHeader } = useTabsContext();
   const { state, descriptors, switchTab } = useRouterState();
 
   const pagerRef = useRef<ComponentRef<typeof PagerView>>(null);
@@ -61,6 +61,11 @@ export function Slot(props: SlotProps) {
       const index = e.nativeEvent.position;
       const route = routes[index];
       if (!route) return;
+      // Reconcile the revealed tab TO the shared header (pin it under the
+      // collapsed bar if it is behind) and refresh the collapse snapshot BEFORE
+      // marking it loaded, so a lazy tab mounts with the right initial offset.
+      // The header itself is never touched by the swipe.
+      syncTabToHeader(route.name);
       markLoaded(route.key);
       // Record the pager's landed index so the provider's sync effect won't
       // re-animate the pager back to it.
@@ -71,7 +76,7 @@ export function Slot(props: SlotProps) {
       // navigation re-render then stalls the frames driving the gesture.
       pendingIndexRef.current = index;
     },
-    [routes, markLoaded, notifyPagerIndex, pagerStore]
+    [routes, markLoaded, notifyPagerIndex, pagerStore, syncTabToHeader]
   );
 
   const onPageScrollStateChanged = useCallback(

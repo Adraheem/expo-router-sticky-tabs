@@ -44,12 +44,14 @@ function TabsFlashListInner<ItemT>(
   props: TabsFlashListProps<ItemT>,
   ref: ForwardedRef<FlashListRef<ItemT>>
 ) {
-  const { scrollHandler, animatedRef, topInset, scrollEventThrottle } = useScrollSync();
+  const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
+    useScrollSync();
   const List = useMemo(() => resolveAnimatedFlashList(), []);
   return (
     <List
       ref={mergeRefs(ref as never, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
+      contentOffset={{ x: 0, y: initialOffset }}
       {...props}
       onScroll={scrollHandler}
       contentContainerStyle={{ paddingTop: topInset, ...props.contentContainerStyle }}

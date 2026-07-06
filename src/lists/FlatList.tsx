@@ -24,11 +24,13 @@ function TabsFlatListInner<ItemT>(
   props: TabsFlatListProps<ItemT>,
   ref: ForwardedRef<FlatList<ItemT>>
 ) {
-  const { scrollHandler, animatedRef, topInset, scrollEventThrottle } = useScrollSync();
+  const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
+    useScrollSync();
   return (
     <AnimatedFlatList
       ref={mergeRefs(ref, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
+      contentOffset={{ x: 0, y: initialOffset }}
       {...(props as FlatListProps<unknown>)}
       onScroll={scrollHandler}
       contentContainerStyle={[{ paddingTop: topInset }, props.contentContainerStyle]}

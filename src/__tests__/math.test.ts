@@ -6,6 +6,7 @@ import {
   indicatorWidth,
   indicatorX,
   interpolatePosition,
+  syncedTabOffset,
 } from '../utils/math';
 
 describe('clamp', () => {
@@ -46,6 +47,31 @@ describe('collapseProgress', () => {
   it('treats any scroll as collapsed when there is no collapsible distance', () => {
     expect(collapseProgress(0, 0, 0)).toBe(0);
     expect(collapseProgress(10, 0, 0)).toBe(1);
+  });
+});
+
+describe('syncedTabOffset', () => {
+  it('pins a tab that is behind the collapsed header up to the collapse', () => {
+    // Header collapsed at 120; a fresh tab at 0 must sit under the pinned bar.
+    expect(syncedTabOffset(0, 120)).toBe(120);
+    expect(syncedTabOffset(50, 120)).toBe(120);
+  });
+  it('keeps a tab already scrolled past the collapse at its own offset', () => {
+    // Perfect restoration in the content region (offset ≥ collapse).
+    expect(syncedTabOffset(320, 120)).toBe(320);
+    expect(syncedTabOffset(1000, 120)).toBe(1000);
+  });
+  it('is a no-op exactly at the collapse boundary', () => {
+    expect(syncedTabOffset(120, 120)).toBe(120);
+  });
+  it('restores exactly when the header is expanded', () => {
+    // headerOffset 0 → every tab keeps its own offset, including 0.
+    expect(syncedTabOffset(0, 0)).toBe(0);
+    expect(syncedTabOffset(1000, 0)).toBe(1000);
+  });
+  it('never returns a negative offset', () => {
+    expect(syncedTabOffset(-10, 0)).toBe(0);
+    expect(syncedTabOffset(-10, 120)).toBe(120);
   });
 });
 

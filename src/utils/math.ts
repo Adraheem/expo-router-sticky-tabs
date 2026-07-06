@@ -27,24 +27,40 @@ export function collapsibleDistance(headerHeight: number, minHeaderHeight: numbe
  * collapses past its minimum height.
  */
 export function headerTranslateY(
-  scrollY: number,
+  offset: number,
   headerHeight: number,
   minHeaderHeight: number
 ): number {
   'worklet';
-  return -clamp(scrollY, 0, collapsibleDistance(headerHeight, minHeaderHeight));
+  return -clamp(offset, 0, collapsibleDistance(headerHeight, minHeaderHeight));
+}
+
+/**
+ * The offset an inactive/incoming tab must sit at to stay consistent with the
+ * shared header collapse. A tab may never sit "behind" the collapse (that would
+ * reveal a gap / force the header to expand), so it is pinned up to
+ * `headerOffset`; a tab already scrolled past the collapse keeps its own offset.
+ *
+ * This is the coordinator's core reconcile decision, isolated as pure math so it
+ * can be unit tested without a Reanimated runtime. It is the reason switching
+ * tabs never moves the shared header: the tab moves to the header, not vice
+ * versa.
+ */
+export function syncedTabOffset(ownOffset: number, headerOffset: number): number {
+  'worklet';
+  return Math.max(ownOffset, headerOffset);
 }
 
 /** `0` fully expanded → `1` fully collapsed. */
 export function collapseProgress(
-  scrollY: number,
+  offset: number,
   headerHeight: number,
   minHeaderHeight: number
 ): number {
   'worklet';
   const distance = collapsibleDistance(headerHeight, minHeaderHeight);
-  if (distance <= 0) return scrollY > 0 ? 1 : 0;
-  return clamp(scrollY, 0, distance) / distance;
+  if (distance <= 0) return offset > 0 ? 1 : 0;
+  return clamp(offset, 0, distance) / distance;
 }
 
 /**

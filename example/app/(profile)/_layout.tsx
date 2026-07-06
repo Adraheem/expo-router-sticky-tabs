@@ -26,7 +26,7 @@ export default function ProfileLayout() {
         <Text>Fixed Header</Text>
       </View>
       <Tabs initialRouteName="posts">
-        <Tabs.Header collapsible sticky safeArea={false}>
+        <Tabs.Header collapsible sticky safeArea={false} parallax={false}>
           <ProfileHeader />
         </Tabs.Header>
 

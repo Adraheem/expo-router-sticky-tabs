@@ -30,6 +30,12 @@ export interface TabsContextValue {
    * effect does not redundantly re-animate the pager to where it already is.
    */
   notifyPagerIndex: (index: number) => void;
+  /**
+   * Reconcile a tab's scroll position to the current shared header collapse
+   * (pin it under the collapsed bar if it is behind). Called by the pager when
+   * a lazy tab first mounts so a freshly-revealed page shows no header gap.
+   */
+  syncTabToHeader: (name: TabName) => void;
 }
 
 export const TabsContext = createContext<TabsContextValue | null>(null);

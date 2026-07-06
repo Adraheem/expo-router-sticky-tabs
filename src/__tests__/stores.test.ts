@@ -81,6 +81,16 @@ describe('headerStore', () => {
     expect(store.getState().config.collapsible).toBe(false);
     expect(store.getState().config.sticky).toBe(true);
   });
+
+  it('mirrors the collapse snapshot and dedupes identical writes', () => {
+    const store = createHeaderStore();
+    expect(store.getState().collapseSnapshot).toBe(0);
+    store.getState().setCollapseSnapshot(120);
+    expect(store.getState().collapseSnapshot).toBe(120);
+    const before = store.getState();
+    store.getState().setCollapseSnapshot(120);
+    expect(store.getState()).toBe(before); // no new object → no re-render
+  });
 });
 
 describe('scrollStore', () => {

@@ -11,11 +11,19 @@ export interface HeaderStoreState {
   hasHeader: boolean;
   /** Behaviour config resolved from `<Tabs.Header />` props. */
   config: HeaderConfig;
+  /**
+   * Plain-JS mirror of the shared `headerOffset`, updated by the coordinator on
+   * the JS thread at discrete moments (tab switch / reveal). Read once at mount
+   * so a lazy tab can seed its initial `contentOffset` without touching a shared
+   * value during render (Reanimated warns on that). Not for the hot scroll path.
+   */
+  collapseSnapshot: number;
 
   setHeaderHeight: (height: number) => void;
   setTabBarHeight: (height: number) => void;
   setConfig: (config: Partial<HeaderConfig>) => void;
   setHasHeader: (hasHeader: boolean) => void;
+  setCollapseSnapshot: (offset: number) => void;
 }
 
 export const DEFAULT_HEADER_CONFIG: HeaderConfig = {
@@ -38,6 +46,7 @@ export function createHeaderStore(): HeaderStore {
     tabBarHeight: 0,
     hasHeader: false,
     config: DEFAULT_HEADER_CONFIG,
+    collapseSnapshot: 0,
 
     setHeaderHeight: (headerHeight) =>
       set((s) => (Math.abs(s.headerHeight - headerHeight) < 0.5 ? s : { headerHeight })),
@@ -45,5 +54,7 @@ export function createHeaderStore(): HeaderStore {
       set((s) => (Math.abs(s.tabBarHeight - tabBarHeight) < 0.5 ? s : { tabBarHeight })),
     setConfig: (config) => set((s) => ({ config: { ...s.config, ...config } })),
     setHasHeader: (hasHeader) => set((s) => (s.hasHeader === hasHeader ? s : { hasHeader })),
+    setCollapseSnapshot: (collapseSnapshot) =>
+      set((s) => (s.collapseSnapshot === collapseSnapshot ? s : { collapseSnapshot })),
   }));
 }
