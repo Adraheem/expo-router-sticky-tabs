@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Component } from 'react';
 import {
-  runOnUI,
   scrollTo,
   useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
   type AnimatedRef,
 } from 'react-native-reanimated';
+import { scheduleOnUI } from 'react-native-worklets';
 import { useStore } from 'zustand';
 
 import { useTabsContext } from '../provider/context';
@@ -79,10 +79,14 @@ export function useScrollSync(): ScrollSync {
   const scrollToOffset = useCallback(
     (offset: number, animated = false) => {
       // `scrollTo` is a worklet — hop to the UI thread when called from JS.
-      runOnUI((y: number, a: boolean) => {
-        'worklet';
-        scrollTo(animatedRef, 0, y, a);
-      })(offset, animated);
+      scheduleOnUI(
+        (y: number, a: boolean) => {
+          'worklet';
+          scrollTo(animatedRef, 0, y, a);
+        },
+        offset,
+        animated
+      );
     },
     [animatedRef]
   );
