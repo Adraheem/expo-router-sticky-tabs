@@ -1,0 +1,39 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main  # Triggers the automation on every push to main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    # Crucial for Trusted Publishing (OIDC) and provenance tracking
+    permissions:
+      contents: write
+      id-token: write  
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v6
+        with:
+          node-version: 'lts/*'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Compile and Build Module
+        run: npm run build # Removes TS source, generates the required native build outputs
+
+      - name: Deploy Package to Registry
+        # The JS-DevTools action safely skips publishing if the package version hasn't changed
+        uses: JS-DevTools/npm-publish@v3
+        with:
+          token: 'skip' # Tells the runner to use OIDC authentication instead of a static token
+          access: 'public'
+          provenance: true
