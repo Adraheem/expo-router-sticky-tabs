@@ -130,41 +130,188 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 
 ## API
 
-### `<Tabs>` / `<Tabs.Provider>`
+### `<Tabs>` / `<Tabs.Provider>` / `TabsRoot`
 
-Root. Parses `<Tabs.Screen>` declarations into Expo Router triggers and provides the animated context. Props: `initialRouteName?`, `minHeaderHeight?`, `disableAnimation?`.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `children` | — | Layout children plus `<Tabs.Screen>` declarations. |
+| `initialRouteName` | First registered tab | The tab to focus initially. |
+| `minHeaderHeight` | `0` | Minimum collapsed header height in px. |
+| `disableAnimation` | `false` | Disables animated transitions and also applies under Reduce Motion. |
 
 ### `<Tabs.Screen>`
 
-Declarative route registration (renders `null`). Props: `name`, `href`, `options` (`title`, `badge`, `icon`, `headerShown`), `lazy`, `disabled`, `keepAlive`, `initialParams`, `listeners`, plus `title`/`badge`/`icon` shortcuts.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `name` | — | Route name; must match the Expo Router child route. |
+| `href` | — | Destination href used for deep links and tab presses. |
+| `options` | — | Tab-bar/header metadata such as `title`, `badge`, `icon` and `headerShown`. |
+| `lazy` | `true` | Defers mounting until the tab is first focused. |
+| `disabled` | `false` | Disables interaction and dims the tab. |
+| `keepAlive` | `true` | Keeps the screen mounted after blur instead of freezing it. |
+| `headerShown` | `true` | Shows the collapsible header for this screen. |
+| `initialParams` | — | Params merged into the route when first navigated to. |
+| `listeners` | — | Navigation listeners for route events. |
+| `title` | `options.title` or `name` | Shortcut for the tab label. |
+| `badge` | `options.badge` | Shortcut for the tab badge. |
+| `icon` | `options.icon` | Shortcut for the tab icon. |
 
 ### `<Tabs.Header>`
 
-Collapsible/sticky overlay. Props: `collapsible`, `sticky`, `parallax`, `blur`, `background`, `safeArea`, `animated`, `dynamicHeight`, `snap`, `floating`. Fully custom children.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `collapsible` | `true` | Allows the header to collapse while scrolling. |
+| `sticky` | `true` | Keeps the header pinned while the content scrolls. |
+| `parallax` | `false` | Applies subtle parallax/fade while collapsing. |
+| `blur` | `false` | Reserved for blur-based header treatments. |
+| `safeArea` | `true` | Adds the safe-area top inset. |
+| `animated` | `true` | Enables the animated collapse/expand behavior. |
+| `dynamicHeight` | `true` | Updates the animated height as the header measures. |
+| `snap` | `false` | Enables snap-style collapse behavior. |
+| `floating` | `false` | Renders the header as a floating overlay. |
+| `children` | — | Custom header content. |
+| `style` | — | Style applied to the header content container. |
+| `background` | — | Full-bleed background layer rendered behind the content. |
 
 ### `<Tabs.TabBar>`
 
-Props: `scrollable`, `fixed`, `indicatorStyle`, `tabStyle`, `labelStyle`, `activeColor`, `inactiveColor`, `showIndicator`, `renderTab`, `renderIndicator`.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `scrollable` | `false` | Allows horizontal scrolling when there are many tabs. |
+| `fixed` | `false` | Forces even-width, non-scrolling tabs. |
+| `style` | — | Bar container style. |
+| `contentContainerStyle` | — | Inner row/scroll container style. |
+| `tabStyle` | — | Style applied to each tab button. |
+| `labelStyle` | — | Style applied to the tab label text. |
+| `activeColor` | `'#000'` | Active tab label/icon color. |
+| `inactiveColor` | `'#8e8e8e'` | Inactive tab label/icon color. |
+| `indicatorStyle` | — | Style applied to the built-in indicator. |
+| `showIndicator` | `true` | Shows the built-in indicator. |
+| `renderTab` | — | Fully custom tab renderer. |
+| `renderIndicator` | — | Fully custom indicator renderer. |
 
 ### `<Tabs.Indicator>`
 
-Reanimated indicator. Props: `interpolateWidth`, `colors`, `spring`, custom `children` render fn. Usable standalone.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `style` | — | Style for the indicator view. |
+| `interpolateWidth` | `true` | Interpolates the width from tab measurements. |
+| `colors` | — | Optional color interpolation stops for the indicator. |
+| `spring` | `false` | Uses Reanimated spring behavior instead of tracking the pager 1:1. |
+| `children` | — | Custom renderer for the indicator. |
 
 ### `<Tabs.Slot>`
 
-The pager host. Renders the mounted route screens as swipeable pages. Props: `swipeEnabled`, `overdrag`.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `style` | — | Pager container style. |
+| `swipeEnabled` | `true` | Allows swiping between tabs. |
+| `overdrag` | `false` | Allows overscroll bounce at the page edges. |
 
 ### List wrappers
 
-`<Tabs.ScrollView>`, `<Tabs.FlatList>`, `<Tabs.SectionList>`, `<Tabs.FlashList>` — drop-in, generic, auto-synced (top inset, header sync, offset restore, pull-to-refresh).
+| Component | Props | Default / behavior |
+| --- | --- | --- |
+| `<Tabs.ScrollView>` | Same props as React Native `ScrollView` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.FlatList>` | Same props as React Native `FlatList` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.SectionList>` | Same props as React Native `SectionList` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.FlashList>` | Same props as Shopify `FlashList` | Auto-synced to the header and scroll restoration. |
 
-### `<Tabs.Lazy>` / `<Tabs.Group>`
+### `<Tabs.Lazy>`
 
-`Lazy` defers expensive content until its tab is focused. `Group` flattens grouped `<Tabs.Screen>` declarations with shared `screenOptions`.
+| Prop | Default | Description |
+| --- | --- | --- |
+| `children` | — | Content to render once the tab has been focused. |
+| `fallback` | `null` | Content shown before first focus. |
+| `unmountOnBlur` | `false` | Unmounts children when the tab blurs instead of keeping them alive. |
+
+### `<Tabs.Group>`
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `children` | — | Nested screens and layout children. |
+| `screenOptions` | `undefined` | Options merged into each nested `<Tabs.Screen>`. |
 
 ### Hooks
 
-`useTabs`, `useCurrentTab`, `usePager`, `useHeader`, `useIndicator`, `useScrollSync`, `useTabMeasurements`, `useCollapsibleHeader`.
+#### `useTabs()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `tabs` | — | All registered tabs in order. |
+| `activeName` | `null` | The focused tab name. |
+| `activeIndex` | — | The focused tab index. |
+| `switchTab(name)` | — | Switches to a tab by name. |
+| `setPage(index)` | — | Moves the pager imperatively. |
+
+#### `useCurrentTab()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `tab` | `undefined` | The currently focused tab metadata. |
+| `name` | `null` | The currently focused tab name. |
+| `index` | — | The currently focused tab index. |
+
+#### `usePager()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `position` | — | Continuous pager position as a shared value. |
+| `activeIndex` | — | Settled active index as a shared value. |
+| `pageCount` | — | Number of registered pages. |
+| `isDragging` | `false` | Whether the pager is currently being dragged. |
+| `isSettling` | `false` | Whether the pager is settling after a gesture. |
+| `setPage(index)` | — | Moves the pager to a page index. |
+
+#### `useHeader()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `height` | `0` | Measured full header height. |
+| `tabBarHeight` | `0` | Measured tab bar height. |
+| `config` | Header defaults | Resolved header behavior configuration. |
+| `headerOffset` | — | Shared collapse offset. |
+| `headerHeight` | — | Shared header height value. |
+| `minHeaderHeight` | — | Shared minimum collapsed header height. |
+
+#### `useIndicator()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `pagerPosition` | — | Continuous pager position for custom indicators. |
+| `activeIndex` | — | Settled active index. |
+| `tabLayouts` | — | Measured tab geometry as a shared value. |
+
+#### `useScrollSync()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `scrollHandler` | — | Reanimated scroll handler for the list. |
+| `animatedRef` | — | Animated ref for imperative scrolling. |
+| `topInset` | — | Top padding required above the list content. |
+| `initialOffset` | `0` | Initial scroll offset restored from the shared collapse state. |
+| `scrollEventThrottle` | `16` | Recommended scroll event throttle. |
+
+#### `useTabMeasurements()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `SharedValue<TabLayout[]>` | — | Measured tab geometry for indicator rendering. |
+
+#### `useCollapsibleHeader()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| `translateStyle` | — | Animated transform style for the header/tab bar. |
+| `parallaxStyle` | — | Optional parallax/fade style. |
+| `progress` | — | Collapse progress from `0` to `1`. |
+| `config` | Header defaults | Resolved header behavior configuration. |
+
+#### `useTabsContext()` / `useTabScreen()`
+
+| Return value | Default | Description |
+| --- | --- | --- |
+| Internal context values | — | Advanced composition hooks for custom integrations inside a `<Tabs>` tree. |
 
 ## Documentation
 
