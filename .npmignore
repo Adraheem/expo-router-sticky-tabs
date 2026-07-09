@@ -6,3 +6,18 @@ __tests__
 *.test.tsx
 *.tsbuildinfo
 /*.tgz
+
+# Local test application
+example/
+
+# Internal documentation and tools
+docs/
+internal/
+
+# Local configurations and hidden tools
+.claude/
+.husky/
+.prettierrc
+commitlint.config.js
+eslint.config.cjs
+jest.setup.js
