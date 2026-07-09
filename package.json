@@ -1,6 +1,6 @@
 {
   "name": "expo-router-sticky-tabs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Instagram-quality sticky headers, collapsible layouts and swipeable top tabs for Expo Router. Headless, Reanimated-powered, New Architecture ready.",
   "main": "build/index.js",
   "types": "build/index.d.ts",
@@ -14,7 +14,6 @@
   },
   "files": [
     "build",
-    "src",
     "!**/__tests__",
     "!**/__mocks__",
     "LICENSE",

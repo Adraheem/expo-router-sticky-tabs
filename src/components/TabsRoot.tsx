@@ -5,6 +5,7 @@ import { TabsProvider } from '../provider/TabsProvider';
 import type { RouterStateValue, TabNavState, TabRouteDescriptor } from '../provider/routerState';
 import type { RegisteredTab, TabName, TabsProviderOptions } from '../types';
 import { partitionChildren } from './Screen';
+import { orderStateByScreens } from '../utils/routeOrder';
 
 export interface TabsRootProps extends TabsProviderOptions {
   children?: ReactNode;
@@ -61,6 +62,22 @@ function TabsInner({ screens, state, descriptors, options, children }: TabsInner
   const activeName = state.routes[state.index]?.name ?? screens[0]?.name ?? '';
   const { switchTab, getTrigger } = useTabTrigger({ name: activeName });
 
+  // Expo Router sorts `state.routes`, so its order diverges from the order the
+  // `<Tabs.Screen>` declarations (and therefore the tab bar) use. Remap the
+  // router state into declaration order once, here at the boundary, so the
+  // whole animated layer downstream — pager pages, indicator, tab focus —
+  // shares a single, consistent index space. Router still owns navigation.
+  const orderSignature = screens.map((s) => s.name).join('|');
+  const orderedState = useMemo(
+    () =>
+      orderStateByScreens(
+        state,
+        screens.map((s) => s.name)
+      ),
+
+    [state, orderSignature]
+  );
+
   const routerSwitchTab = useCallback((name: TabName) => switchTab(name, {}), [switchTab]);
   const routerGetTrigger = useCallback<RouterStateValue['getTrigger']>(
     (name) => {
@@ -73,7 +90,7 @@ function TabsInner({ screens, state, descriptors, options, children }: TabsInner
   return (
     <TabsProvider
       screens={screens}
-      state={state}
+      state={orderedState}
       descriptors={descriptors}
       routerSwitchTab={routerSwitchTab}
       routerGetTrigger={routerGetTrigger}
