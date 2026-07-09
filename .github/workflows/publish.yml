@@ -21,6 +21,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Clean build directory
+        run: npm run clean
+
       - name: Build package
         run: npm run build
 
