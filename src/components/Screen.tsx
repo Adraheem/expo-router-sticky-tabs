@@ -20,7 +20,7 @@ export function isScreenElement(child: ReactNode): child is ReactElement<TabScre
 
 /**
  * Splits `<Tabs>` children into screen declarations (which become router
- * triggers) and layout children (Header / TabBar / Slot / anything else).
+ * triggers) and layout children (Header / TabBar / anything else).
  */
 export function partitionChildren(children: ReactNode): {
   screens: RegisteredTab[];

@@ -24,12 +24,12 @@ No scroll or swipe frame crosses the bridge or triggers a render.
 
 - **Lazy tabs.** `<Tabs.Screen lazy>` (default) and `<Tabs.Lazy>` defer mounting a tab until first focus.
 - **Screens stay mounted** after first visit (via `react-native-screens`), so scroll offset is preserved for free — no save/restore round-trips.
-- **Virtualization preserved.** The list wrappers are thin — `Tabs.FlatList`/`SectionList` keep windowing; `Tabs.FlashList` keeps FlashList's recycling.
+- **Virtualization preserved.** `<Tabs.Scroll>` re-creates the detected list in place (no wrapper view), so `FlatList`/`SectionList` keep windowing and `FlashList` keeps its recycling.
 
 ## Tips
 
-- Prefer `Tabs.FlashList` for long, uniform lists.
+- Prefer a `FlashList` (wrapped in `<Tabs.Scroll>`) for long, uniform lists.
 - Memoize `renderItem` and use stable `keyExtractor`.
-- Give `Tabs.FlatList` a `getItemLayout` when cell size is fixed.
+- Give a `FlatList` a `getItemLayout` when cell size is fixed.
 - Set `minHeaderHeight` on `<Tabs>` if you want the header to stay partly visible when collapsed (avoids re-measuring).
 - Keep `<Tabs.Header>` content cheap; heavy header content can use `dynamicHeight` measurement but should avoid layout thrash.
