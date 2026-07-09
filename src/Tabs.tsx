@@ -3,28 +3,32 @@ import { Header } from './components/Header';
 import { Indicator } from './components/Indicator';
 import { Lazy } from './components/Lazy';
 import { Screen } from './components/Screen';
-import { Slot } from './components/Slot';
+import { TabsScroll } from './components/Scroll';
 import { TabBar } from './components/TabBar';
 import { TabsRoot } from './components/TabsRoot';
-import { TabsFlashList } from './lists/FlashList';
-import { TabsFlatList } from './lists/FlatList';
-import { TabsScrollView } from './lists/ScrollView';
-import { TabsSectionList } from './lists/SectionList';
 
 /**
  * The single entry point. Mirrors Expo Router's `Stack` / `Tabs` compound
  * component pattern, so `<Tabs>`, `<Tabs.Screen>`, `<Tabs.Header>` and friends
  * read exactly like first-party Expo Router APIs.
  *
+ * The pager is rendered automatically — screens display without a slot. Inside
+ * each screen, wrap the list in `<Tabs.Scroll>` to sync it with the header.
+ *
  * @example
  * ```tsx
+ * // layout
  * <Tabs>
  *   <Tabs.Header><ProfileHeader /></Tabs.Header>
  *   <Tabs.TabBar />
  *   <Tabs.Screen name="posts" href="/(profile)/posts" />
  *   <Tabs.Screen name="reels" href="/(profile)/reels" />
- *   <Tabs.Slot />
  * </Tabs>
+ *
+ * // a screen
+ * <Tabs.Scroll>
+ *   <FlatList data={data} renderItem={renderItem} />
+ * </Tabs.Scroll>
  * ```
  */
 export const Tabs = Object.assign(TabsRoot, {
@@ -34,11 +38,7 @@ export const Tabs = Object.assign(TabsRoot, {
   Header,
   TabBar,
   Indicator,
-  Slot,
   Lazy,
   Group,
-  ScrollView: TabsScrollView,
-  FlatList: TabsFlatList,
-  FlashList: TabsFlashList,
-  SectionList: TabsSectionList,
+  Scroll: TabsScroll,
 });

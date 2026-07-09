@@ -18,7 +18,40 @@ expanded the header. It is replaced by **`headerOffset`**: the shared collapse a
 
 The same field renamed on the `TabsSharedValues` type (`shared.scrollY` → `shared.headerOffset`). If
 you need a specific tab's raw scroll offset, read it from `useScrollSync` inside that tab instead.
-There are no other public API changes.
+
+### List wrappers + `<Tabs.Slot>` → `<Tabs.Scroll>` (breaking)
+
+The four `Tabs.FlatList` / `Tabs.ScrollView` / `Tabs.SectionList` / `Tabs.FlashList` wrappers and the
+explicit `<Tabs.Slot />` were removed. The pager now renders automatically, and one auto-detecting
+`<Tabs.Scroll>` replaces the four wrappers — write a plain React Native list and it is synced for you.
+
+**In each tab screen** — wrap the plain list:
+
+```diff
+  import { Tabs } from 'expo-router-sticky-tabs';
++ import { FlatList } from 'react-native';
+
+  export default function Posts() {
+-   return <Tabs.FlatList data={data} renderItem={renderItem} />;
++   return (
++     <Tabs.Scroll>
++       <FlatList data={data} renderItem={renderItem} />
++     </Tabs.Scroll>
++   );
+  }
+```
+
+**In the layout** — delete `<Tabs.Slot />`; the pager renders itself:
+
+```diff
+    <Tabs.Screen name="tagged" href="/tagged" />
+-   <Tabs.Slot />
+  </Tabs>
+```
+
+Configure the pager (swipe / overscroll) via the `pager` prop on `<Tabs>` —
+`<Tabs pager={{ swipeEnabled: false }}>`. For a list `<Tabs.Scroll>` can't reach (hidden behind your
+own component), spread `useStickyScroll()` onto a Reanimated `Animated.*` list instead.
 
 ## From `react-native-collapsible-tab-view`
 
@@ -28,7 +61,7 @@ Both give you a collapsible header + swipeable tabs. The key difference: **here 
 |---|---|
 | `<Tabs.Container renderHeader>` | `<Tabs><Tabs.Header>…</Tabs.Header>` |
 | `<Tabs.Tab name="…">` with inline children | `<Tabs.Screen name href>` + a route file (`name.tsx`) |
-| `<Tabs.FlatList>` | `<Tabs.FlatList>` (same idea, auto-synced) |
+| `<Tabs.FlatList>` | `<Tabs.Scroll><FlatList/></Tabs.Scroll>` (auto-detected) |
 | `useCurrentTabScrollY` | `useHeader().headerOffset` / `useScrollSync` |
 | Tab bar via `renderTabBar` | `<Tabs.TabBar renderTab>` |
 
@@ -36,8 +69,8 @@ Steps:
 
 1. Move each inline tab body into its own route file inside the layout folder (`posts.tsx`, `reels.tsx`, …).
 2. Replace `<Tabs.Container>` with `<Tabs>` in the folder's `_layout.tsx`, and declare `<Tabs.Screen name href>` for each route.
-3. Swap the header render prop for `<Tabs.Header>` children, add `<Tabs.TabBar>` and `<Tabs.Slot>`.
-4. Replace the list components with `Tabs.FlatList` / `Tabs.ScrollView` etc.
+3. Swap the header render prop for `<Tabs.Header>` children and add `<Tabs.TabBar>` (the pager renders automatically).
+4. Wrap each list in `<Tabs.Scroll>` (a plain React Native `FlatList` / `ScrollView` / …).
 
 You gain: real URLs, deep links, browser history and `router.navigate` for free.
 
@@ -55,5 +88,5 @@ You gain: real URLs, deep links, browser history and `router.navigate` for free.
 If you were faking top tabs with bottom `Tabs`:
 
 1. Keep your route files as-is.
-2. In the layout, replace `<Tabs>` (from `expo-router`) with `<Tabs>` (from `expo-router-sticky-tabs`), add `<Tabs.Header>`, `<Tabs.TabBar>` and `<Tabs.Slot>`, and declare `<Tabs.Screen name href>`.
+2. In the layout, replace `<Tabs>` (from `expo-router`) with `<Tabs>` (from `expo-router-sticky-tabs`), add `<Tabs.Header>` and `<Tabs.TabBar>`, and declare `<Tabs.Screen name href>` (the pager renders automatically).
 3. Remove bottom-tab-specific options; use `<Tabs.Screen options>` (`title`, `badge`, `icon`).

@@ -9,6 +9,7 @@ import {
   type TabNavState,
   type TabRouteDescriptor,
 } from './routerState';
+import { TabsPager } from '../components/Pager';
 import { useScrollCoordinator } from '../hooks/useScrollCoordinator';
 import { createHeaderStore } from '../stores/headerStore';
 import { createPagerStore } from '../stores/pagerStore';
@@ -50,6 +51,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     routerGetTrigger,
     minHeaderHeight = 0,
     disableAnimation = false,
+    pager,
   } = props;
 
   // ---- Stores: created once (lazy init), stable identity. ------------------
@@ -117,7 +119,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     pagerStore.getState().setPageCount(screens.length);
   }, [screensSignature, tabStore, pagerStore]);
 
-  // ---- Imperative pager bridge (registered by <Tabs.Slot />). -------------
+  // ---- Imperative pager bridge (registered by the internal pager). --------
   const pagerSetPageRef = useRef<((index: number) => void) | null>(null);
   const lastPagerIndexRef = useRef(state.index);
   const registerPager = useCallback((setPage: (index: number) => void) => {
@@ -205,8 +207,14 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     <TabsContext.Provider value={tabsContext}>
       <RouterStateContext.Provider value={routerState}>
         {/* A single flex container gives the pager room to fill and a stable
-            positioning context for the absolute Header/TabBar overlays. */}
-        <View style={styles.container}>{children}</View>
+            positioning context for the absolute Header/TabBar overlays. The
+            pager is rendered automatically after the layout children (Header /
+            TabBar are absolute overlays), so screens display without an
+            explicit slot. */}
+        <View style={styles.container}>
+          {children}
+          <TabsPager swipeEnabled={pager?.swipeEnabled} overdrag={pager?.overdrag} />
+        </View>
       </RouterStateContext.Provider>
     </TabsContext.Provider>
   );

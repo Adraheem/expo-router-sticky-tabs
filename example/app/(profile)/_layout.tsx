@@ -50,8 +50,6 @@ export default function ProfileLayout() {
           options={{ title: 'Tagged', icon: TaggedIcon }}
           lazy={false}
         />
-
-        <Tabs.Slot />
       </Tabs>
     </View>
   );
