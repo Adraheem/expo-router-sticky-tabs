@@ -3,7 +3,7 @@
     "lib": ["dom", "DOM.Iterable", "esnext"],
     "types": ["jest"],
     "typeRoots": ["./ts-declarations", "./node_modules/@types"],
-    "jsx": "react-jsx",
+    "jsx": "react-native",
     "jsxImportSource": "react",
     "target": "esnext",
     "moduleResolution": "bundler",
