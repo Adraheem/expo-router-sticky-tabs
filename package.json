@@ -20,13 +20,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "expo-module tsc",
+    "build": "expo-module tsc && npm run minify",
     "clean": "expo-module clean",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "prepare": "expo-module tsc",
-    "prepublishOnly": "expo-module tsc"
+    "minify": "esbuild build/**/*.js --minify --keep-names --allow-overwrite --outdir=build",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "react-native",
@@ -60,6 +61,7 @@
     "@types/jest": "^29.2.1",
     "@types/react": "~19.2.4",
     "babel-preset-expo": "~57.0.0",
+    "esbuild": "^0.28.1",
     "eslint": "~9.39.4",
     "eslint-config-universe": "^15.0.3",
     "expo": "^57.0.2",
@@ -79,6 +81,7 @@
     "react-native-screens": "4.25.2",
     "react-native-worklets": "0.10.0",
     "react-refresh": "^0.14.2",
+    "terser": "^5.49.0",
     "typescript": "~6.0.3",
     "zustand": "^5.0.14"
   },
