@@ -147,6 +147,8 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     tabStore,
     headerStore,
     headerOffset,
+    headerHeight,
+    minHeaderHeight: minHeader,
   });
 
   // ---- Router state → animated layer (runs on every navigation change). ----

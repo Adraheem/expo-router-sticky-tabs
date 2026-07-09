@@ -6,7 +6,7 @@ import type { PagerStore } from '../stores/pagerStore';
 import type { ScrollStore } from '../stores/scrollStore';
 import type { TabStore } from '../stores/tabStore';
 import type { TabName } from '../types';
-import { syncedTabOffset } from '../utils/math';
+import { collapseAnchor, collapsibleDistance, syncedTabOffset } from '../utils/math';
 
 export interface ScrollCoordinator {
   /**
@@ -24,6 +24,10 @@ export interface ScrollCoordinatorParams {
   headerStore: HeaderStore;
   /** The shared collapse driver. Read-only here — the coordinator never writes it. */
   headerOffset: SharedValue<number>;
+  /** Measured header height — needed to derive the collapsible distance. */
+  headerHeight: SharedValue<number>;
+  /** Collapsed header height — needed to derive the collapsible distance. */
+  minHeaderHeight: SharedValue<number>;
 }
 
 /**
@@ -42,6 +46,7 @@ export interface ScrollCoordinatorParams {
  */
 export function useScrollCoordinator(params: ScrollCoordinatorParams): ScrollCoordinator {
   const { scrollStore, pagerStore, tabStore, headerStore, headerOffset } = params;
+  const { headerHeight, minHeaderHeight } = params;
 
   const syncTabToHeader = useCallback(
     (name: TabName) => {
@@ -57,6 +62,13 @@ export function useScrollCoordinator(params: ScrollCoordinatorParams): ScrollCoo
       if (!entry) return;
       const own = entry.lastOffset.value;
       const target = syncedTabOffset(own, header);
+      // Re-derive the tab's collapse anchor so its next scroll frame picks the
+      // header up exactly where it is now. Must happen even when the offset is
+      // already in place — a tab scrolled past an expanded header is exactly
+      // the `target === own` case, and a stale anchor there makes the first
+      // scroll slam the header to the tab's absolute position.
+      const distance = collapsibleDistance(headerHeight.value, minHeaderHeight.value);
+      entry.anchor.value = collapseAnchor(target, header, distance);
       if (target === own) return;
       // Seamless (non-animated) so the adjustment lands before the page is seen.
       entry.scrollToOffset(target, false);
@@ -64,7 +76,7 @@ export function useScrollCoordinator(params: ScrollCoordinatorParams): ScrollCoo
       // value; the list's own onScroll confirms it on the next frame.
       entry.lastOffset.value = target;
     },
-    [scrollStore, headerStore, headerOffset]
+    [scrollStore, headerStore, headerOffset, headerHeight, minHeaderHeight]
   );
 
   // On the rising edge of a swipe, pre-align the neighbours the gesture might

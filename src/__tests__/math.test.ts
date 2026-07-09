@@ -1,5 +1,6 @@
 import {
   clamp,
+  collapseAnchor,
   collapseProgress,
   collapsibleDistance,
   headerTranslateY,
@@ -72,6 +73,84 @@ describe('syncedTabOffset', () => {
   it('never returns a negative offset', () => {
     expect(syncedTabOffset(-10, 0)).toBe(0);
     expect(syncedTabOffset(-10, 120)).toBe(120);
+  });
+});
+
+describe('collapseAnchor', () => {
+  // One scroll frame as the useScrollSync worklet runs it: drive the header
+  // from the anchored delta, then re-derive the anchor.
+  function frame(y: number, anchor: number, distance: number) {
+    const headerOffset = clamp(y - anchor, 0, distance);
+    return { headerOffset, anchor: collapseAnchor(y, headerOffset, distance) };
+  }
+
+  it('is continuous at focus time: the anchored delta reproduces the current header offset', () => {
+    // Whatever state the coordinator leaves a tab in, the first scroll frame
+    // must not move the header (own ≥ header, header < distance).
+    for (const [own, header, d] of [
+      [600, 0, 150],
+      [600, 75, 150],
+      [120, 120, 150],
+      [0, 0, 150],
+    ] as const) {
+      const anchor = collapseAnchor(own, header, d);
+      expect(clamp(own - anchor, 0, d)).toBe(header);
+    }
+  });
+
+  it('collapses gradually from a scrolled tab instead of jumping (the reported bug)', () => {
+    // Tab at 600 while the header is fully expanded (another tab expanded it).
+    let { headerOffset, anchor } = { headerOffset: 0, anchor: collapseAnchor(600, 0, 150) };
+    expect(anchor).toBe(600);
+    // Scroll up (content down) by 10px per frame → header collapses 10px per frame.
+    ({ headerOffset, anchor } = frame(610, anchor, 150));
+    expect(headerOffset).toBe(10);
+    ({ headerOffset, anchor } = frame(680, anchor, 150));
+    expect(headerOffset).toBe(80);
+  });
+
+  it('rebases at the expanded bound so scrolling to the top restores the canonical state', () => {
+    // Tab at 600, header expanded → scroll down toward the top.
+    let anchor = collapseAnchor(600, 0, 150);
+    let headerOffset: number;
+    ({ headerOffset, anchor } = frame(400, anchor, 150));
+    expect(headerOffset).toBe(0); // header stays fully expanded on the way up
+    expect(anchor).toBe(400); // …and the anchor follows the offset down
+    ({ headerOffset, anchor } = frame(0, anchor, 150));
+    expect(headerOffset).toBe(0);
+    expect(anchor).toBe(0); // back to canonical absolute mode at the top
+    // Scrolling down from the top now collapses 1:1, as for a fresh tab.
+    ({ headerOffset, anchor } = frame(80, anchor, 150));
+    expect(headerOffset).toBe(80);
+  });
+
+  it('locks to canonical mode once fully collapsed', () => {
+    // Collapse the header fully from an anchored (previously-scrolled) tab.
+    let anchor = collapseAnchor(600, 0, 150);
+    let headerOffset: number;
+    ({ headerOffset, anchor } = frame(750, anchor, 150));
+    expect(headerOffset).toBe(150);
+    expect(anchor).toBe(0); // locked
+    // Scrolling back down mid-list must NOT re-expand it…
+    ({ headerOffset, anchor } = frame(700, anchor, 150));
+    expect(headerOffset).toBe(150);
+    // …until the content nears the top (offset < collapsible distance).
+    ({ headerOffset, anchor } = frame(90, anchor, 150));
+    expect(headerOffset).toBe(90);
+  });
+
+  it('keeps a tab focused under a fully-collapsed header in canonical mode', () => {
+    expect(collapseAnchor(600, 150, 150)).toBe(0);
+    expect(collapseAnchor(150, 150, 150)).toBe(0);
+  });
+
+  it('is 0 when there is no collapsible distance', () => {
+    expect(collapseAnchor(600, 0, 0)).toBe(0);
+  });
+
+  it('never exceeds the tab offset, so the header never outruns the content', () => {
+    // anchor ≤ own keeps headerOffset = clamp(own − anchor) ≥ 0 and ≤ own.
+    expect(collapseAnchor(50, 120, 150)).toBe(0);
   });
 });
 

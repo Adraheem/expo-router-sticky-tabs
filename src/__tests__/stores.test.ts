@@ -98,6 +98,7 @@ describe('scrollStore', () => {
     const store = createScrollStore();
     const entry = {
       lastOffset: { value: 0 } as never,
+      anchor: { value: 0 } as never,
       scrollToOffset: jest.fn(),
     };
     store.getState().register('posts', entry);

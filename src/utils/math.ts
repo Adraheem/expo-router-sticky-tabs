@@ -51,6 +51,35 @@ export function syncedTabOffset(ownOffset: number, headerOffset: number): number
   return Math.max(ownOffset, headerOffset);
 }
 
+/**
+ * The per-tab collapse anchor. The focused tab drives the header by the
+ * anchored delta `clamp(ownOffset - anchor, 0, distance)` rather than its
+ * absolute offset, so a tab whose offset legitimately diverged from the shared
+ * collapse (it was scrolled, then another tab moved the header) picks up the
+ * header exactly where it is instead of slamming it to its own position.
+ *
+ * Given the offset the header is currently at, this returns the anchor that
+ * reproduces it — making the mapping continuous at focus time and at every
+ * scroll frame:
+ *
+ * - fully collapsed (`headerOffset ≥ distance`) → `0`: locked to canonical
+ *   absolute mode, so the header only re-expands when the content nears the
+ *   top (offset < distance), matching a tab that did all its own scrolling.
+ * - at the expanded bound (`headerOffset` clamped to `0`) → `ownOffset`: the
+ *   anchor follows the content up, so reaching the top lands back on the
+ *   canonical `anchor = 0` state with no gap.
+ * - mid-range → `ownOffset - headerOffset`, i.e. unchanged frame to frame.
+ *
+ * Clamped to `[0, ownOffset]` so `headerOffset ≤ ownOffset` always holds and
+ * content can never sit "behind" the collapse.
+ */
+export function collapseAnchor(ownOffset: number, headerOffset: number, distance: number): number {
+  'worklet';
+  if (distance <= 0) return 0;
+  if (headerOffset >= distance) return 0;
+  return clamp(ownOffset - headerOffset, 0, Math.max(0, ownOffset));
+}
+
 /** `0` fully expanded → `1` fully collapsed. */
 export function collapseProgress(
   offset: number,

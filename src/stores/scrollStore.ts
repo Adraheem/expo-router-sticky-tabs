@@ -11,6 +11,13 @@ import type { TabName } from '../types';
 export interface ScrollEntry {
   /** The tab's own live scroll offset. Written on every scroll frame. */
   lastOffset: SharedValue<number>;
+  /**
+   * The tab's collapse anchor — while focused, the tab drives the shared
+   * header by `clamp(lastOffset - anchor, 0, distance)`, so it picks the
+   * header up where other tabs left it instead of imposing its absolute
+   * offset. Re-derived by the coordinator at focus/reveal (`collapseAnchor`).
+   */
+  anchor: SharedValue<number>;
   /** Imperatively scroll this tab's list to an offset. */
   scrollToOffset: (offset: number, animated?: boolean) => void;
 }
