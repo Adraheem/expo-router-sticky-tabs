@@ -7,23 +7,22 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
-          registry-url: 'https://registry.npmjs.org' # Sets up your .npmrc to target public npm
-
+          node-version: "24"
       - name: Install dependencies
         run: npm ci
 
-      - name: Run build (if applicable)
-        run: npm run build --if-present
+      - name: Run tests
+        run: npm test
+
+      - name: Build package
+        run: npm run build
 
       - name: Publish package to npm
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Authenticates the terminal using your secret
+        uses: JS-DevTools/npm-publish@v4
