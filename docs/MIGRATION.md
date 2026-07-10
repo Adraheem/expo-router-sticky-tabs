@@ -18,7 +18,28 @@ expanded the header. It is replaced by **`headerOffset`**: the shared collapse a
 
 The same field renamed on the `TabsSharedValues` type (`shared.scrollY` → `shared.headerOffset`). If
 you need a specific tab's raw scroll offset, read it from `useScrollSync` inside that tab instead.
-There are no other public API changes.
+
+### `<Tabs.Slot>` removed (breaking)
+
+`<Tabs>` now renders the pager automatically, so **screens display without a `<Tabs.Slot />`**. The `<Tabs.Slot>` component (and the `SlotProps` type) have been **removed** — delete the element from your layout:
+
+```diff
+  <Tabs>
+    <Tabs.Header>…</Tabs.Header>
+    <Tabs.TabBar />
+    <Tabs.Screen name="posts" href="/posts" />
+-   <Tabs.Slot />
+  </Tabs>
+```
+
+The pager props that used to live on `<Tabs.Slot>` move to `<Tabs>`:
+
+```diff
+- <Tabs.Slot swipeEnabled={false} overdrag style={pagerStyle} />
++ <Tabs swipeEnabled={false} overdrag pagerStyle={pagerStyle}> … </Tabs>
+```
+
+The list wrappers (`Tabs.FlatList`, `Tabs.ScrollView`, `Tabs.SectionList`, `Tabs.FlashList`) now also fall back to their plain primitive when rendered outside `<Tabs>` instead of throwing.
 
 ## From `react-native-collapsible-tab-view`
 
@@ -36,7 +57,7 @@ Steps:
 
 1. Move each inline tab body into its own route file inside the layout folder (`posts.tsx`, `reels.tsx`, …).
 2. Replace `<Tabs.Container>` with `<Tabs>` in the folder's `_layout.tsx`, and declare `<Tabs.Screen name href>` for each route.
-3. Swap the header render prop for `<Tabs.Header>` children, add `<Tabs.TabBar>` and `<Tabs.Slot>`.
+3. Swap the header render prop for `<Tabs.Header>` children and add `<Tabs.TabBar>` (the pager renders automatically).
 4. Replace the list components with `Tabs.FlatList` / `Tabs.ScrollView` etc.
 
 You gain: real URLs, deep links, browser history and `router.navigate` for free.
@@ -55,5 +76,5 @@ You gain: real URLs, deep links, browser history and `router.navigate` for free.
 If you were faking top tabs with bottom `Tabs`:
 
 1. Keep your route files as-is.
-2. In the layout, replace `<Tabs>` (from `expo-router`) with `<Tabs>` (from `expo-router-sticky-tabs`), add `<Tabs.Header>`, `<Tabs.TabBar>` and `<Tabs.Slot>`, and declare `<Tabs.Screen name href>`.
+2. In the layout, replace `<Tabs>` (from `expo-router`) with `<Tabs>` (from `expo-router-sticky-tabs`), add `<Tabs.Header>` and `<Tabs.TabBar>`, and declare `<Tabs.Screen name href>`.
 3. Remove bottom-tab-specific options; use `<Tabs.Screen options>` (`title`, `badge`, `icon`).

@@ -168,6 +168,12 @@ export interface TabsProviderOptions {
   minHeaderHeight?: number;
   /** Disable all animation (also auto-enabled under Reduce Motion). */
   disableAnimation?: boolean;
+  /** Allow swiping between tabs. Default `true`. */
+  swipeEnabled?: boolean;
+  /** Overscroll bounce at the pager edges (iOS/Android). Default `false`. */
+  overdrag?: boolean;
+  /** Style applied to the internal pager container. */
+  pagerStyle?: StyleProp<ViewStyle>;
 }
 
 /**

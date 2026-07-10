@@ -3,7 +3,6 @@ import { Header } from './components/Header';
 import { Indicator } from './components/Indicator';
 import { Lazy } from './components/Lazy';
 import { Screen } from './components/Screen';
-import { Slot } from './components/Slot';
 import { TabBar } from './components/TabBar';
 import { TabsRoot } from './components/TabsRoot';
 import { TabsFlashList } from './lists/FlashList';
@@ -23,9 +22,11 @@ import { TabsSectionList } from './lists/SectionList';
  *   <Tabs.TabBar />
  *   <Tabs.Screen name="posts" href="/(profile)/posts" />
  *   <Tabs.Screen name="reels" href="/(profile)/reels" />
- *   <Tabs.Slot />
  * </Tabs>
  * ```
+ *
+ * The pager that lays out the screens is rendered automatically — you don't add
+ * anything for the tab screens to display.
  */
 export const Tabs = Object.assign(TabsRoot, {
   /** Alias of the root for advanced composition. */
@@ -34,7 +35,6 @@ export const Tabs = Object.assign(TabsRoot, {
   Header,
   TabBar,
   Indicator,
-  Slot,
   Lazy,
   Group,
   ScrollView: TabsScrollView,

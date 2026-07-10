@@ -4,6 +4,7 @@ import { useCallback, useMemo, type ReactNode } from 'react';
 import { TabsProvider } from '../provider/TabsProvider';
 import type { RouterStateValue, TabNavState, TabRouteDescriptor } from '../provider/routerState';
 import type { RegisteredTab, TabName, TabsProviderOptions } from '../types';
+import { Pager } from './Pager';
 import { partitionChildren } from './Screen';
 import { orderStateByScreens } from '../utils/routeOrder';
 
@@ -96,6 +97,14 @@ function TabsInner({ screens, state, descriptors, options, children }: TabsInner
       routerGetTrigger={routerGetTrigger}
       {...options}>
       {children}
+      {/* The pager is always rendered — the tab screens display without the
+          consumer placing anything. It fills the container while the absolute
+          Header/TabBar overlays sit above it. */}
+      <Pager
+        swipeEnabled={options.swipeEnabled}
+        overdrag={options.overdrag}
+        style={options.pagerStyle}
+      />
     </TabsProvider>
   );
 }
