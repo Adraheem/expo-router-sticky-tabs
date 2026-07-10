@@ -15,9 +15,18 @@ import Animated from 'react-native-reanimated';
 
 import { useScrollSync } from '../hooks/useScrollSync';
 import { useIsInsideTabScreen } from '../provider/screenContext';
+import { toAnimatedComponent } from '../utils/animatedComponent';
 import { mergeRefs } from '../utils/mergeRefs';
 
-export type TabsFlashListProps<ItemT> = FlashListProps<ItemT>;
+export type TabsFlashListProps<ItemT> = FlashListProps<ItemT> & {
+  /**
+   * Custom scroll component to render in place of `@shopify/flash-list`. Must
+   * accept the same `FlashListProps`. Supplying it also avoids the lazy
+   * `require` of the optional peer dependency. Wired up with the same
+   * scroll-sync behavior.
+   */
+  as?: ComponentType<FlashListProps<ItemT>>;
+};
 
 let RawFlashList: ComponentType<Record<string, unknown>> | null = null;
 let AnimatedFlashList: ComponentType<Record<string, unknown>> | null = null;
@@ -51,16 +60,23 @@ function resolveAnimatedFlashList(): ComponentType<Record<string, unknown>> {
 }
 
 function TabsFlashListInner<ItemT>(
-  props: TabsFlashListProps<ItemT>,
+  { as, ...props }: TabsFlashListProps<ItemT>,
   ref: ForwardedRef<FlashListRef<ItemT>>
 ) {
   // Outside <Tabs> there is no scroll sync to bind to — behave exactly like a
-  // plain FlashList, forwarding only the caller's own props + ref.
+  // plain FlashList (or the provided `as`), forwarding only the caller's own
+  // props + ref. An explicit `as` also skips the optional peer-dep require.
   if (!useIsInsideTabScreen()) {
-    const List = requireFlashList();
-    return <List ref={ref as never} {...props} />;
+    const List = (as as ComponentType<Record<string, unknown>> | undefined) ?? requireFlashList();
+    return <List ref={ref as never} {...(props as FlashListProps<unknown>)} />;
   }
-  return <SyncedFlashList forwardedRef={ref as never} {...(props as FlashListProps<unknown>)} />;
+  return (
+    <SyncedFlashList
+      forwardedRef={ref as never}
+      as={as as ComponentType<Record<string, unknown>> | undefined}
+      {...(props as FlashListProps<unknown>)}
+    />
+  );
 }
 
 /**
@@ -69,11 +85,15 @@ function TabsFlashListInner<ItemT>(
  */
 function SyncedFlashList({
   forwardedRef,
+  as,
   ...props
-}: FlashListProps<unknown> & { forwardedRef: Ref<unknown> }) {
+}: FlashListProps<unknown> & {
+  forwardedRef: Ref<unknown>;
+  as?: ComponentType<Record<string, unknown>>;
+}) {
   const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
     useScrollSync();
-  const List = useMemo(() => resolveAnimatedFlashList(), []);
+  const List = useMemo(() => (as ? toAnimatedComponent(as) : resolveAnimatedFlashList()), [as]);
   return (
     <List
       ref={mergeRefs(forwardedRef, animatedRef as never)}

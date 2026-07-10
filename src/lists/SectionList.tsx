@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useMemo,
   type ComponentType,
   type ForwardedRef,
   type ReactElement,
@@ -10,12 +11,20 @@ import Animated from 'react-native-reanimated';
 
 import { useScrollSync } from '../hooks/useScrollSync';
 import { useIsInsideTabScreen } from '../provider/screenContext';
+import { toAnimatedComponent } from '../utils/animatedComponent';
 import { mergeRefs } from '../utils/mergeRefs';
 
 export type TabsSectionListProps<ItemT, SectionT = DefaultSectionT> = SectionListProps<
   ItemT,
   SectionT
->;
+> & {
+  /**
+   * Custom scroll component to render in place of the default `SectionList`.
+   * Must accept the same `SectionListProps`. It is wired up with the same
+   * scroll-sync behavior.
+   */
+  as?: ComponentType<SectionListProps<ItemT, SectionT>>;
+};
 
 // Reanimated does not ship an `Animated.SectionList`, so create one.
 const AnimatedSectionList = Animated.createAnimatedComponent(
@@ -25,17 +34,27 @@ const AnimatedSectionList = Animated.createAnimatedComponent(
 >;
 
 function TabsSectionListInner<ItemT, SectionT = DefaultSectionT>(
-  props: TabsSectionListProps<ItemT, SectionT>,
+  { as, ...props }: TabsSectionListProps<ItemT, SectionT>,
   ref: ForwardedRef<SectionList<ItemT, SectionT>>
 ) {
   // Outside <Tabs> there is no scroll sync to bind to — behave exactly like a
-  // plain SectionList, forwarding only the caller's own props + ref.
+  // plain SectionList (or the provided `as`), forwarding only the caller's own
+  // props + ref.
   if (!useIsInsideTabScreen()) {
-    return <SectionList ref={ref} {...props} />;
+    const Base = (as ?? SectionList) as ComponentType<
+      SectionListProps<unknown, DefaultSectionT> & { ref?: Ref<unknown> }
+    >;
+    return (
+      <Base
+        ref={ref as never}
+        {...(props as unknown as SectionListProps<unknown, DefaultSectionT>)}
+      />
+    );
   }
   return (
     <SyncedSectionList
       forwardedRef={ref as never}
+      as={as as ComponentType<Record<string, unknown>> | undefined}
       {...(props as unknown as SectionListProps<unknown, DefaultSectionT>)}
     />
   );
@@ -47,12 +66,20 @@ function TabsSectionListInner<ItemT, SectionT = DefaultSectionT>(
  */
 function SyncedSectionList({
   forwardedRef,
+  as,
   ...props
-}: SectionListProps<unknown, DefaultSectionT> & { forwardedRef: Ref<unknown> }) {
+}: SectionListProps<unknown, DefaultSectionT> & {
+  forwardedRef: Ref<unknown>;
+  as?: ComponentType<Record<string, unknown>>;
+}) {
   const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
     useScrollSync();
+  const List = useMemo(
+    () => (as ? toAnimatedComponent(as) : AnimatedSectionList),
+    [as]
+  ) as typeof AnimatedSectionList;
   return (
-    <AnimatedSectionList
+    <List
       ref={mergeRefs(forwardedRef, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
       contentOffset={{ x: 0, y: initialOffset }}
