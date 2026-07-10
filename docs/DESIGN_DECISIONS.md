@@ -17,13 +17,13 @@ We investigated Expo Router's headless tab primitives in `expo-router/ui` (SDK 5
 - `useTabsWithTriggers({ triggers })` builds a React Navigation custom navigator (`ExpoTabRouter`) and returns `{ state, descriptors, navigation, NavigationContent }`.
 - `descriptors[routeKey].render()` renders a tab route's screen. Expo Router's own `TabSlot` maps `state.routes → descriptors[key].render()` and keeps them all mounted via `react-native-screens`.
 
-So we do exactly what `TabSlot` does — but instead of stacking screens with `display: none`, **the auto-rendered pager (`components/Pager`) lays each `descriptors[key].render()` out as a page inside `react-native-pager-view`.** This gives true swipe-between-routes while:
+So we do exactly what `TabSlot` does — but instead of stacking screens with `display: none`, **`<Tabs.Slot>` lays each `descriptors[key].render()` out as a page inside `react-native-pager-view`.** This gives true swipe-between-routes while:
 
 - Expo Router owns the navigation **state**, URLs, deep links and history.
 - Tab switching goes through `useTabTrigger().switchTab(name)` (which calls `router.navigate` / dispatches `JUMP_TO`).
 - The pager position is a Reanimated shared value; `state.index` drives the pager, and swipe-settle calls `switchTab` back into the router.
 
-The result: **only the pager (`components/Pager`) and the router-sync effect touch Expo Router internals.** Everything else (header, tab bar, indicator, scroll sync, stores, hooks) is independent. If a future Expo Router release changes the headless API, the blast radius is one file.
+The result: **only `<Tabs.Slot>` and the router-sync effect touch Expo Router internals.** Everything else (header, tab bar, indicator, lists, stores, hooks) is independent. If a future Expo Router release changes the headless API, the blast radius is one file.
 
 ## Reuse vs. build
 
@@ -89,7 +89,7 @@ Deferred, in rough priority order:
 - **Web** — native pagers don't render on web; a CSS scroll-snap / transform pager behind the same public API.
 - More flagship examples — Threads, TikTok, Spotify Artist, LinkedIn, Pinterest.
 - Advanced header modes — polished `parallax` / `blur` / `snap` / `floating`.
-- Deeper `FlashList` optimization and a full swipe + deep-link integration test suite (→ 95% coverage).
+- Deeper `Tabs.FlashList` optimization and a full swipe + deep-link integration test suite (→ 95% coverage).
 - `semantic-release` + automatic changelog (config staged, not yet enabled).
 - Animated GIF docs.
 - Codemod-style migration from `react-native-collapsible-tab-view` / `react-native-tab-view`.

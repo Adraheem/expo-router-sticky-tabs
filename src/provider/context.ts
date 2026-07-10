@@ -23,7 +23,7 @@ export interface TabsContextValue {
   switchTab: (name: TabName) => void;
   /** Imperatively move the pager to an index without a router round-trip. */
   setPage: (index: number) => void;
-  /** Register the pager's imperative `setPage`, called by the internal pager. */
+  /** Register the pager's imperative `setPage`, called by `<Tabs.Slot />`. */
   registerPager: (setPage: (index: number) => void) => void;
   /**
    * Report the pager's settled index (from a swipe) so the router→pager sync
