@@ -58,7 +58,7 @@ export function useScrollCoordinator(params: ScrollCoordinatorParams): ScrollCoo
       const entry = scrollStore.getState().tabs[name];
       // Not registered yet (e.g. a lazy tab that has not mounted). It will pin
       // itself on mount via its initial content offset (seeded from the snapshot
-      // just written above) + a follow-up sync from the pager's onPageSelected.
+      // just written above) + a follow-up sync from the Slot callback.
       if (!entry) return;
       const own = entry.lastOffset.value;
       const target = syncedTabOffset(own, header);

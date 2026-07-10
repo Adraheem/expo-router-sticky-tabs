@@ -7,9 +7,9 @@ import type { TabNavState } from '../provider/routerState';
  * `<Tabs.Screen>` declarations appear in.
  *
  * The whole visual layer — `<Tabs.TabBar />`, the indicator and each tab's
- * `index` — is addressed by declaration order, while the pager lays its pages
- * out from `state.routes`. If the two orders diverge, the pages land under the
- * wrong tabs.
+ * `index` — is addressed by declaration order, while `<Tabs.Slot />` lays its
+ * pager pages out from `state.routes`. If the two orders diverge, the pages
+ * land under the wrong tabs.
  *
  * This remaps the router state into declaration order so both index spaces
  * agree. Expo Router stays the source of truth for *which* route is focused

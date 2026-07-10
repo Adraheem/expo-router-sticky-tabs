@@ -7,9 +7,13 @@ export { Screen } from './components/Screen';
 export { Header } from './components/Header';
 export { TabBar } from './components/TabBar';
 export { Indicator } from './components/Indicator';
+export { Slot } from './components/Slot';
 export { Lazy } from './components/Lazy';
 export { Group } from './components/Group';
-export { TabsScroll } from './components/Scroll';
+export { TabsScrollView } from './lists/ScrollView';
+export { TabsFlatList } from './lists/FlatList';
+export { TabsSectionList } from './lists/SectionList';
+export { TabsFlashList } from './lists/FlashList';
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
 export { useTabs } from './hooks/useTabs';
@@ -18,7 +22,6 @@ export { usePager } from './hooks/usePager';
 export { useHeader } from './hooks/useHeader';
 export { useIndicator } from './hooks/useIndicator';
 export { useScrollSync } from './hooks/useScrollSync';
-export { useStickyScroll } from './hooks/useStickyScroll';
 export { useTabMeasurements } from './hooks/useTabMeasurements';
 export { useCollapsibleHeader } from './hooks/useCollapsibleHeader';
 export { useTabsContext } from './provider/context';
@@ -54,14 +57,17 @@ export type {
   TabsSharedValues,
 } from './types';
 export type { TabsRootProps } from './components/TabsRoot';
-export type { ScrollProps } from './components/Scroll';
+export type { SlotProps } from './components/Slot';
 export type { LazyProps } from './components/Lazy';
 export type { GroupProps } from './components/Group';
+export type { TabsScrollViewProps } from './lists/ScrollView';
+export type { TabsFlatListProps } from './lists/FlatList';
+export type { TabsSectionListProps } from './lists/SectionList';
+export type { TabsFlashListProps } from './lists/FlashList';
 export type { UseTabsResult } from './hooks/useTabs';
 export type { UseCurrentTabResult } from './hooks/useCurrentTab';
 export type { UsePagerResult } from './hooks/usePager';
 export type { UseHeaderResult } from './hooks/useHeader';
 export type { UseIndicatorResult } from './hooks/useIndicator';
 export type { ScrollSync } from './hooks/useScrollSync';
-export type { UseStickyScrollResult } from './hooks/useStickyScroll';
 export type { CollapsibleHeader } from './hooks/useCollapsibleHeader';

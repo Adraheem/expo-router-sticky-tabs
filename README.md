@@ -2,7 +2,7 @@
 
 **Instagram-quality sticky headers, collapsible layouts and swipeable top tabs for [Expo Router](https://docs.expo.dev/router/introduction/).**
 
-Headless. Reanimated-powered. New Architecture ready. It feels like a first-party Expo Router API — `<Tabs>`, `<Tabs.Screen>`, `<Tabs.Header>`, `<Tabs.TabBar>` — and **never replaces the router**. Expo Router stays the single source of truth for routes, URLs, deep links and history. This library only adds UI, layout, scroll/header synchronization and animation.
+Headless. Reanimated-powered. New Architecture ready. It feels like a first-party Expo Router API — `<Tabs>`, `<Tabs.Screen>`, `<Tabs.Header>`, `<Tabs.TabBar>`, `<Tabs.Slot>` — and **never replaces the router**. Expo Router stays the single source of truth for routes, URLs, deep links and history. This library only adds UI, layout, scroll/header synchronization and animation.
 
 ```tsx
 // app/(profile)/_layout.tsx
@@ -20,13 +20,12 @@ export default function ProfileLayout() {
       <Tabs.Screen name="posts" href="/posts" options={{ title: 'Posts' }} />
       <Tabs.Screen name="reels" href="/reels" options={{ title: 'Reels', badge: 3 }} />
       <Tabs.Screen name="tagged" href="/tagged" options={{ title: 'Tagged' }} />
+
+      <Tabs.Slot />
     </Tabs>
   );
 }
 ```
-
-> The pager renders automatically — there is no slot to place. Inside each tab
-> screen, wrap the list in `<Tabs.Scroll>` and it is synced to the header.
 
 ---
 
@@ -45,7 +44,7 @@ Building an Instagram/Threads/TikTok-style profile on Expo Router means reconcil
 - 👆 **Native swipe** via `react-native-pager-view` (gestures, velocity, RTL, a11y, virtualization).
 - 📌 **Collapsible + sticky header** driven entirely by Reanimated shared values on the UI thread.
 - 🔄 **Per-tab scroll sync** — each tab keeps its own scroll position, header state and indicator, restored on return (just like Instagram).
-- 📜 **Auto-detected scrolling** — wrap your list in `<Tabs.Scroll>` and any `FlatList` / `ScrollView` / `SectionList` / `FlashList` is synced automatically (or spread `useStickyScroll()` for full control).
+- 📜 **Drop-in list wrappers** — `Tabs.ScrollView`, `Tabs.FlatList`, `Tabs.SectionList`, `Tabs.FlashList`.
 - 🎯 **Animated indicator** — pager-offset interpolation, width + colour interpolation, spring, custom renderers.
 - ⚡ **Zero unnecessary re-renders** — separate zustand stores + shared values; the hot path never touches React state.
 - ♿ **Accessible** — tab/tablist roles, selected state, Reduce Motion support.
@@ -60,7 +59,7 @@ npx expo install expo-router-sticky-tabs \
   react-native-pager-view react-native-safe-area-context react-native-screens zustand
 ```
 
-`@shopify/flash-list` is optional — install it only if you wrap a `FlashList` in `<Tabs.Scroll>`.
+`@shopify/flash-list` is optional — install it only if you use `<Tabs.FlashList>`.
 
 ### 1. Babel (Reanimated)
 
@@ -104,37 +103,30 @@ app/
   _layout.tsx              # GestureHandlerRootView + SafeAreaProvider + Stack
   (profile)/
     _layout.tsx            # export default → <Tabs> … </Tabs>
-    posts.tsx              # a tab screen (wraps a list in <Tabs.Scroll>)
+    posts.tsx              # a tab screen (uses <Tabs.FlatList>)
     reels.tsx
     tagged.tsx
 ```
 
-Each tab screen wraps its list in `<Tabs.Scroll>`. Write a plain React Native
-list — `<Tabs.Scroll>` finds the nearest scrollable and syncs it to the header:
+Each tab screen renders one of the synced list wrappers:
 
 ```tsx
 // app/(profile)/posts.tsx
 import { Tabs } from 'expo-router-sticky-tabs';
-import { FlatList } from 'react-native';
 
 export default function Posts() {
   return (
-    <Tabs.Scroll>
-      <FlatList
-        data={data}
-        numColumns={3}
-        keyExtractor={(i) => String(i)}
-        renderItem={({ item }) => <Cell item={item} />}
-      />
-    </Tabs.Scroll>
+    <Tabs.FlatList
+      data={data}
+      numColumns={3}
+      keyExtractor={(i) => String(i)}
+      renderItem={({ item }) => <Cell item={item} />}
+    />
   );
 }
 ```
 
 That's it — scroll one tab, switch away and back: the offset, header collapse and indicator are all restored.
-
-> Have a list hidden behind your own component that `<Tabs.Scroll>` can't reach?
-> Spread `useStickyScroll()` onto a Reanimated `Animated.*` list instead.
 
 ## API
 
@@ -146,7 +138,6 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `initialRouteName` | First registered tab | The tab to focus initially. |
 | `minHeaderHeight` | `0` | Minimum collapsed header height in px. |
 | `disableAnimation` | `false` | Disables animated transitions and also applies under Reduce Motion. |
-| `pager` | — | Auto-rendered pager options: `{ swipeEnabled?: boolean; overdrag?: boolean }`. |
 
 ### `<Tabs.Screen>`
 
@@ -209,15 +200,22 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `spring` | `false` | Uses Reanimated spring behavior instead of tracking the pager 1:1. |
 | `children` | — | Custom renderer for the indicator. |
 
-### `<Tabs.Scroll>`
-
-Wrap a screen's list. `<Tabs.Scroll>` finds the nearest `FlatList` / `ScrollView` / `SectionList` / `FlashList` in the JSX you give it, converts it to its Reanimated `Animated.*` form and injects the scroll handler, ref and header insets. No extra native view is added, and virtualization is preserved. The list may be nested inside views; for a list hidden behind your own component — which React can't reach into — use `useStickyScroll()` instead.
+### `<Tabs.Slot>`
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `children` | — | The screen content containing the list to sync. |
+| `style` | — | Pager container style. |
+| `swipeEnabled` | `true` | Allows swiping between tabs. |
+| `overdrag` | `false` | Allows overscroll bounce at the page edges. |
 
-> **The pager is automatic.** Screens render without a slot — `<Tabs>` renders the pager itself, after any layout children. Configure it with the `pager` prop on `<Tabs>`: `pager={{ swipeEnabled, overdrag }}`.
+### List wrappers
+
+| Component | Props | Default / behavior |
+| --- | --- | --- |
+| `<Tabs.ScrollView>` | Same props as React Native `ScrollView` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.FlatList>` | Same props as React Native `FlatList` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.SectionList>` | Same props as React Native `SectionList` | Auto-synced to the header and scroll restoration. |
+| `<Tabs.FlashList>` | Same props as Shopify `FlashList` | Auto-synced to the header and scroll restoration. |
 
 ### `<Tabs.Lazy>`
 
@@ -284,27 +282,7 @@ Wrap a screen's list. `<Tabs.Scroll>` finds the nearest `FlatList` / `ScrollView
 | `activeIndex` | — | Settled active index. |
 | `tabLayouts` | — | Measured tab geometry as a shared value. |
 
-#### `useStickyScroll(ref?)`
-
-Escape hatch for a list `<Tabs.Scroll>` can't reach. Spread the result onto a Reanimated `Animated.*` scrollable (or a component that forwards these to one). Pass your own `ref` to have it merged with the animated ref.
-
-```tsx
-const scroll = useStickyScroll();
-return <Animated.FlatList {...scroll} data={data} renderItem={renderItem} />;
-```
-
-| Return value | Default | Description |
-| --- | --- | --- |
-| `ref` | — | Merged animated ref (attach to the list). |
-| `onScroll` | — | Reanimated scroll handler. |
-| `scrollEventThrottle` | `16` | Recommended scroll event throttle. |
-| `contentOffset` | — | Initial `{ x, y }` restored from the shared collapse. |
-| `contentContainerStyle` | — | `{ paddingTop }` clearing the header + bar. |
-| `scrollIndicatorInsets` | — | `{ top }` matching the header inset (drop for FlashList). |
-
 #### `useScrollSync()`
-
-Low-level engine behind `<Tabs.Scroll>` and `useStickyScroll()`. Prefer `useStickyScroll()`; reach for this only when you need the raw pieces.
 
 | Return value | Default | Description |
 | --- | --- | --- |

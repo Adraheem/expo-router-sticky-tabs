@@ -1,23 +1,21 @@
 import { Tabs } from 'expo-router-sticky-tabs';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 const DATA = Array.from({ length: 24 }, (_, i) => i);
 
 export default function Reels() {
   return (
-    <Tabs.Scroll>
-      <FlatList
-        data={DATA}
-        keyExtractor={(i) => `reel-${i}`}
-        contentContainerStyle={styles.content}
-        renderItem={({ item }) => (
-          <View style={[styles.card, { backgroundColor: `hsl(${(item * 37) % 360} 45% 30%)` }]}>
-            <Text style={styles.play}>▷</Text>
-            <Text style={styles.caption}>Reel #{item + 1}</Text>
-          </View>
-        )}
-      />
-    </Tabs.Scroll>
+    <Tabs.FlatList
+      data={DATA}
+      keyExtractor={(i) => `reel-${i}`}
+      contentContainerStyle={styles.content}
+      renderItem={({ item }) => (
+        <View style={[styles.card, { backgroundColor: `hsl(${(item * 37) % 360} 45% 30%)` }]}>
+          <Text style={styles.play}>▷</Text>
+          <Text style={styles.caption}>Reel #{item + 1}</Text>
+        </View>
+      )}
+    />
   );
 }
 

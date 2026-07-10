@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router-sticky-tabs';
-import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 const DATA = Array.from({ length: 60 }, (_, i) => i);
 
@@ -7,25 +7,22 @@ export default function Posts() {
   const { width } = useWindowDimensions();
   const size = width / 3;
 
-  // Write a plain FlatList — <Tabs.Scroll> finds it and syncs it to the header.
   return (
-    <Tabs.Scroll>
-      <FlatList
-        data={DATA}
-        keyExtractor={(i) => `post-${i}`}
-        numColumns={3}
-        contentContainerStyle={styles.content}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.cell,
-              { width: size, height: size, backgroundColor: `hsl(${(item * 24) % 360} 55% 72%)` },
-            ]}>
-            <Text style={styles.index}>{item + 1}</Text>
-          </View>
-        )}
-      />
-    </Tabs.Scroll>
+    <Tabs.FlatList
+      data={DATA}
+      keyExtractor={(i) => `post-${i}`}
+      numColumns={3}
+      contentContainerStyle={styles.content}
+      renderItem={({ item }) => (
+        <View
+          style={[
+            styles.cell,
+            { width: size, height: size, backgroundColor: `hsl(${(item * 24) % 360} 55% 72%)` },
+          ]}>
+          <Text style={styles.index}>{item + 1}</Text>
+        </View>
+      )}
+    />
   );
 }
 
