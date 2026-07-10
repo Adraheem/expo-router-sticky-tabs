@@ -2,7 +2,7 @@
 
 **Instagram-quality sticky headers, collapsible layouts and swipeable top tabs for [Expo Router](https://docs.expo.dev/router/introduction/).**
 
-Headless. Reanimated-powered. New Architecture ready. It feels like a first-party Expo Router API — `<Tabs>`, `<Tabs.Screen>`, `<Tabs.Header>`, `<Tabs.TabBar>`, `<Tabs.Slot>` — and **never replaces the router**. Expo Router stays the single source of truth for routes, URLs, deep links and history. This library only adds UI, layout, scroll/header synchronization and animation.
+Headless. Reanimated-powered. New Architecture ready. It feels like a first-party Expo Router API — `<Tabs>`, `<Tabs.Screen>`, `<Tabs.Header>`, `<Tabs.TabBar>` — and **never replaces the router**. Expo Router stays the single source of truth for routes, URLs, deep links and history. This library only adds UI, layout, scroll/header synchronization and animation.
 
 ```tsx
 // app/(profile)/_layout.tsx
@@ -20,12 +20,12 @@ export default function ProfileLayout() {
       <Tabs.Screen name="posts" href="/posts" options={{ title: 'Posts' }} />
       <Tabs.Screen name="reels" href="/reels" options={{ title: 'Reels', badge: 3 }} />
       <Tabs.Screen name="tagged" href="/tagged" options={{ title: 'Tagged' }} />
-
-      <Tabs.Slot />
     </Tabs>
   );
 }
 ```
+
+> The pager that lays out the tab screens is rendered automatically — there is no slot or container to add.
 
 ---
 
@@ -138,6 +138,9 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `initialRouteName` | First registered tab | The tab to focus initially. |
 | `minHeaderHeight` | `0` | Minimum collapsed header height in px. |
 | `disableAnimation` | `false` | Disables animated transitions and also applies under Reduce Motion. |
+| `swipeEnabled` | `true` | Allow swiping between tabs (the pager is rendered automatically). |
+| `overdrag` | `false` | Allow overscroll bounce at the pager edges. |
+| `pagerStyle` | — | Style applied to the internal pager container. |
 
 ### `<Tabs.Screen>`
 
@@ -200,14 +203,6 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `spring` | `false` | Uses Reanimated spring behavior instead of tracking the pager 1:1. |
 | `children` | — | Custom renderer for the indicator. |
 
-### `<Tabs.Slot>`
-
-| Prop | Default | Description |
-| --- | --- | --- |
-| `style` | — | Pager container style. |
-| `swipeEnabled` | `true` | Allows swiping between tabs. |
-| `overdrag` | `false` | Allows overscroll bounce at the page edges. |
-
 ### List wrappers
 
 | Component | Props | Default / behavior |
@@ -216,6 +211,8 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `<Tabs.FlatList>` | Same props as React Native `FlatList` | Auto-synced to the header and scroll restoration. |
 | `<Tabs.SectionList>` | Same props as React Native `SectionList` | Auto-synced to the header and scroll restoration. |
 | `<Tabs.FlashList>` | Same props as Shopify `FlashList` | Auto-synced to the header and scroll restoration. |
+
+> Rendered **outside** `<Tabs>` (e.g. a list component reused on a non-tab screen), each wrapper transparently falls back to its plain primitive — same props and ref, no scroll-sync injection — so it never throws.
 
 ### `<Tabs.Lazy>`
 

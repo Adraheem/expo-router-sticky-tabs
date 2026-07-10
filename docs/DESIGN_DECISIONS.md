@@ -17,13 +17,13 @@ We investigated Expo Router's headless tab primitives in `expo-router/ui` (SDK 5
 - `useTabsWithTriggers({ triggers })` builds a React Navigation custom navigator (`ExpoTabRouter`) and returns `{ state, descriptors, navigation, NavigationContent }`.
 - `descriptors[routeKey].render()` renders a tab route's screen. Expo Router's own `TabSlot` maps `state.routes → descriptors[key].render()` and keeps them all mounted via `react-native-screens`.
 
-So we do exactly what `TabSlot` does — but instead of stacking screens with `display: none`, **`<Tabs.Slot>` lays each `descriptors[key].render()` out as a page inside `react-native-pager-view`.** This gives true swipe-between-routes while:
+So we do exactly what `TabSlot` does — but instead of stacking screens with `display: none`, **the internal pager (rendered automatically by `<Tabs>`) lays each `descriptors[key].render()` out as a page inside `react-native-pager-view`.** This gives true swipe-between-routes while:
 
 - Expo Router owns the navigation **state**, URLs, deep links and history.
 - Tab switching goes through `useTabTrigger().switchTab(name)` (which calls `router.navigate` / dispatches `JUMP_TO`).
 - The pager position is a Reanimated shared value; `state.index` drives the pager, and swipe-settle calls `switchTab` back into the router.
 
-The result: **only `<Tabs.Slot>` and the router-sync effect touch Expo Router internals.** Everything else (header, tab bar, indicator, lists, stores, hooks) is independent. If a future Expo Router release changes the headless API, the blast radius is one file.
+The result: **only the internal pager and the router-sync effect touch Expo Router internals.** Everything else (header, tab bar, indicator, lists, stores, hooks) is independent. If a future Expo Router release changes the headless API, the blast radius is one file.
 
 ## Reuse vs. build
 

@@ -13,7 +13,7 @@ import { TabScreenContext } from '../provider/screenContext';
 
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 
-export interface SlotProps {
+export interface PagerProps {
   style?: StyleProp<ViewStyle>;
   /** Allow swiping between tabs. Default `true`. */
   swipeEnabled?: boolean;
@@ -22,12 +22,13 @@ export interface SlotProps {
 }
 
 /**
- * `<Tabs.Slot />` renders the active Expo Router route — but instead of the
- * single-route `TabSlot`, it lays every mounted tab screen out as a page inside
+ * The internal pager. `<Tabs>` always renders this, so the mounted tab screens
+ * display without the consumer placing anything — instead of the single-route
+ * `TabSlot`, it lays every mounted tab screen out as a page inside
  * `react-native-pager-view`, giving true swipe-between-routes while Expo Router
  * stays the source of truth for which route is focused.
  */
-export function Slot(props: SlotProps) {
+export function Pager(props: PagerProps) {
   const { style, swipeEnabled = true, overdrag = false } = props;
   const { shared, registerPager, notifyPagerIndex, pagerStore, syncTabToHeader } = useTabsContext();
   const { state, descriptors, switchTab } = useRouterState();
@@ -138,6 +139,7 @@ export function Slot(props: SlotProps) {
     </AnimatedPagerView>
   );
 }
+Pager.displayName = 'Tabs.Pager';
 
 const styles = StyleSheet.create({
   pager: { flex: 1 },

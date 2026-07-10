@@ -117,7 +117,7 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
     pagerStore.getState().setPageCount(screens.length);
   }, [screensSignature, tabStore, pagerStore]);
 
-  // ---- Imperative pager bridge (registered by <Tabs.Slot />). -------------
+  // ---- Imperative pager bridge (registered by the internal pager). --------
   const pagerSetPageRef = useRef<((index: number) => void) | null>(null);
   const lastPagerIndexRef = useRef(state.index);
   const registerPager = useCallback((setPage: (index: number) => void) => {

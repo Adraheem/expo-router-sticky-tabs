@@ -7,7 +7,6 @@ export { Screen } from './components/Screen';
 export { Header } from './components/Header';
 export { TabBar } from './components/TabBar';
 export { Indicator } from './components/Indicator';
-export { Slot } from './components/Slot';
 export { Lazy } from './components/Lazy';
 export { Group } from './components/Group';
 export { TabsScrollView } from './lists/ScrollView';
@@ -57,7 +56,6 @@ export type {
   TabsSharedValues,
 } from './types';
 export type { TabsRootProps } from './components/TabsRoot';
-export type { SlotProps } from './components/Slot';
 export type { LazyProps } from './components/Lazy';
 export type { GroupProps } from './components/Group';
 export type { TabsScrollViewProps } from './lists/ScrollView';

@@ -10,7 +10,7 @@ Expo Router (routes, URLs, deep links, history)   ← source of truth
   <TabsProvider>  (zustand stores + Reanimated shared values + router sync + scroll coordinator)
         ├── <Tabs.Header>    collapsible/sticky overlay  ┐ share one collapse transform,
         ├── <Tabs.TabBar>    sticky tab strip + Indicator ┘ driven by `headerOffset`
-        └── <Tabs.Slot>      PagerView → descriptors[key].render() per page
+        └── <Pager> (auto)   PagerView → descriptors[key].render() per page
                  └── screen → <Tabs.FlatList/ScrollView/SectionList/FlashList>
 ```
 
@@ -30,9 +30,9 @@ behind the collapse). This is why switching tabs never expands, collapses or rep
 | `components/TabsRoot` | Parse `<Tabs.Screen>` into triggers, build the headless navigator, mount `NavigationContent`. |
 | `provider/TabsProvider` | Create stores + shared values (stable identity), sync router state → animated layer, expose context. |
 | `provider/context` | The stable `TabsContext` (stores, shared values, `switchTab`, `setPage`). |
-| `provider/routerState` | Lightweight view of `{ state, descriptors, switchTab }` consumed by `Slot`/`TabBar`. |
+| `provider/routerState` | Lightweight view of `{ state, descriptors, switchTab }` consumed by `Pager`/`TabBar`. |
 | `provider/screenContext` | Per-page `{ name, index }` so list wrappers know their tab. |
-| `components/Slot` | The pager host: maps `state.routes → descriptors[key].render()`, drives `pagerPosition`, syncs swipe → router. |
+| `components/Pager` | The pager host, always rendered by `<Tabs>`: maps `state.routes → descriptors[key].render()`, drives `pagerPosition`, syncs swipe → router. |
 | `components/Header` | Measures itself, applies the collapse transform + parallax/safe-area. |
 | `components/TabBar` | Renders triggers, measures tab layouts into `tabLayouts`, sticks via the shared transform, hosts the `Indicator`. |
 | `components/Indicator` | Interpolates x/width/colour from `pagerPosition` + `tabLayouts` on the UI thread. |
@@ -53,4 +53,4 @@ behind the collapse). This is why switching tabs never expands, collapses or rep
 
 ## Single responsibility
 
-Every file has one job and a typed interface. The only module that touches Expo Router internals is `Slot` (+ the sync effect); everything else depends only on our own stores/shared values, so the components are independently testable and the Expo Router coupling is contained.
+Every file has one job and a typed interface. The only module that touches Expo Router internals is `Pager` (+ the sync effect); everything else depends only on our own stores/shared values, so the components are independently testable and the Expo Router coupling is contained.
