@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useMemo,
   type ComponentType,
   type ForwardedRef,
   type ReactElement,
@@ -10,9 +11,17 @@ import Animated from 'react-native-reanimated';
 
 import { useScrollSync } from '../hooks/useScrollSync';
 import { useIsInsideTabScreen } from '../provider/screenContext';
+import { toAnimatedComponent } from '../utils/animatedComponent';
 import { mergeRefs } from '../utils/mergeRefs';
 
-export type TabsFlatListProps<ItemT> = FlatListProps<ItemT>;
+export type TabsFlatListProps<ItemT> = FlatListProps<ItemT> & {
+  /**
+   * Custom scroll component to render in place of the default `FlatList` (e.g.
+   * `FlatList` from `react-native-gesture-handler`). Must accept the same
+   * `FlatListProps`. It is wired up with the same scroll-sync behavior.
+   */
+  as?: ComponentType<FlatListProps<ItemT>>;
+};
 
 // Reanimated's `Animated.FlatList` types conflict with React Native's own
 // `FlatListProps` (e.g. `CellRendererComponent` null vs undefined). Re-type it
@@ -22,15 +31,23 @@ const AnimatedFlatList = Animated.FlatList as unknown as ComponentType<
 >;
 
 function TabsFlatListInner<ItemT>(
-  props: TabsFlatListProps<ItemT>,
+  { as, ...props }: TabsFlatListProps<ItemT>,
   ref: ForwardedRef<FlatList<ItemT>>
 ) {
   // Outside <Tabs> there is no scroll sync to bind to — behave exactly like a
-  // plain FlatList, forwarding only the caller's own props + ref (no injection).
+  // plain FlatList (or the provided `as`), forwarding only the caller's own
+  // props + ref (no injection).
   if (!useIsInsideTabScreen()) {
-    return <FlatList ref={ref} {...props} />;
+    const Base = (as ?? FlatList) as ComponentType<FlatListProps<unknown> & { ref?: Ref<unknown> }>;
+    return <Base ref={ref as never} {...(props as FlatListProps<unknown>)} />;
   }
-  return <SyncedFlatList forwardedRef={ref as never} {...(props as FlatListProps<unknown>)} />;
+  return (
+    <SyncedFlatList
+      forwardedRef={ref as never}
+      as={as as ComponentType<Record<string, unknown>> | undefined}
+      {...(props as FlatListProps<unknown>)}
+    />
+  );
 }
 
 /**
@@ -39,12 +56,20 @@ function TabsFlatListInner<ItemT>(
  */
 function SyncedFlatList({
   forwardedRef,
+  as,
   ...props
-}: FlatListProps<unknown> & { forwardedRef: Ref<unknown> }) {
+}: FlatListProps<unknown> & {
+  forwardedRef: Ref<unknown>;
+  as?: ComponentType<Record<string, unknown>>;
+}) {
   const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
     useScrollSync();
+  const List = useMemo(
+    () => (as ? toAnimatedComponent(as) : AnimatedFlatList),
+    [as]
+  ) as typeof AnimatedFlatList;
   return (
-    <AnimatedFlatList
+    <List
       ref={mergeRefs(forwardedRef, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
       contentOffset={{ x: 0, y: initialOffset }}

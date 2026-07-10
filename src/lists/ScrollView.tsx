@@ -1,12 +1,20 @@
-import { forwardRef, type ForwardedRef } from 'react';
+import { forwardRef, useMemo, type ComponentType, type ForwardedRef } from 'react';
 import { ScrollView, type ScrollViewProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useScrollSync } from '../hooks/useScrollSync';
 import { useIsInsideTabScreen } from '../provider/screenContext';
+import { toAnimatedComponent } from '../utils/animatedComponent';
 import { mergeRefs } from '../utils/mergeRefs';
 
-export type TabsScrollViewProps = ScrollViewProps;
+export type TabsScrollViewProps = ScrollViewProps & {
+  /**
+   * Custom scroll component to render in place of the default `ScrollView` (e.g.
+   * `ScrollView` from `react-native-gesture-handler`). Must accept the same
+   * `ScrollViewProps`. It is wired up with the same scroll-sync behavior.
+   */
+  as?: ComponentType<ScrollViewProps>;
+};
 
 /**
  * A drop-in `ScrollView` that auto-synchronises its tab's scroll position with
@@ -15,13 +23,17 @@ export type TabsScrollViewProps = ScrollViewProps;
  * degrades to a plain `ScrollView`.
  */
 export const TabsScrollView = forwardRef<Animated.ScrollView, TabsScrollViewProps>(
-  function TabsScrollView(props, ref) {
+  function TabsScrollView({ as, ...props }, ref) {
     // Outside <Tabs> there is no scroll sync to bind to — behave exactly like a
-    // plain ScrollView, forwarding only the caller's own props + ref.
+    // plain ScrollView (or the provided `as`), forwarding only the caller's own
+    // props + ref.
     if (!useIsInsideTabScreen()) {
-      return <ScrollView ref={ref as never} {...props} />;
+      const Base = (as ?? ScrollView) as ComponentType<
+        ScrollViewProps & { ref?: ForwardedRef<unknown> }
+      >;
+      return <Base ref={ref as never} {...props} />;
     }
-    return <SyncedScrollView forwardedRef={ref} {...props} />;
+    return <SyncedScrollView forwardedRef={ref} as={as} {...props} />;
   }
 );
 
@@ -31,12 +43,17 @@ export const TabsScrollView = forwardRef<Animated.ScrollView, TabsScrollViewProp
  */
 function SyncedScrollView({
   forwardedRef,
+  as,
   ...props
 }: TabsScrollViewProps & { forwardedRef: ForwardedRef<Animated.ScrollView> }) {
   const { scrollHandler, animatedRef, topInset, initialOffset, scrollEventThrottle } =
     useScrollSync();
+  const List = useMemo(
+    () => (as ? toAnimatedComponent(as) : Animated.ScrollView),
+    [as]
+  ) as typeof Animated.ScrollView;
   return (
-    <Animated.ScrollView
+    <List
       ref={mergeRefs(forwardedRef, animatedRef as never)}
       scrollEventThrottle={scrollEventThrottle}
       contentOffset={{ x: 0, y: initialOffset }}
