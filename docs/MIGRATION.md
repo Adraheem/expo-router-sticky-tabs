@@ -2,6 +2,25 @@
 
 ## Upgrading within `expo-router-sticky-tabs`
 
+### Expo SDK 58: `initialRouteName` moves to the layout
+
+On Expo SDK 58, Expo Router's headless tabs take the initial route from the layout route's
+`unstable_settings.anchor` and ignore `initialRouteName` passed to `<Tabs>`. Declare it next to the
+layout (`unstable_settings.initialRouteName` still works but is deprecated in favour of `anchor`).
+Keeping the prop is harmless, and it still applies on older SDKs:
+
+```diff
++ export const unstable_settings = { anchor: 'posts' };
++
+  export default function ProfileLayout() {
+    return (
+      <Tabs initialRouteName="posts">
+```
+
+Nothing else changes for consumers. Expo Router 58 also creates a tab's route only once it is first
+focused; `<Tabs>` preloads the remaining tabs into the router state so every page can still be
+swiped to, without changing focus or the URL.
+
 ### `scrollY` → `headerOffset` (breaking)
 
 The shared value that drives the header was renamed and re-scoped. Previously `scrollY` was the

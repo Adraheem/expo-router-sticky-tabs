@@ -37,10 +37,12 @@ export function Pager(props: PagerProps) {
   const routes = state.routes;
   const activeIndex = state.index;
 
-  // Track which lazy screens have been mounted at least once.
+  // Track which lazy screens have been mounted at least once, by tab name: a
+  // tab's route key changes when Expo Router 58+ swaps its placeholder for the
+  // real route.
   const [loaded, setLoaded] = useState<Record<string, boolean>>(() => {
-    const key = routes[activeIndex]?.key;
-    return key ? { [key]: true } : {};
+    const name = routes[activeIndex]?.name;
+    return name ? { [name]: true } : {};
   });
 
   // Register imperative paging with the provider (used for deep links etc.).
@@ -50,8 +52,8 @@ export function Pager(props: PagerProps) {
     });
   }, [registerPager]);
 
-  const markLoaded = useCallback((key: string) => {
-    setLoaded((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  const markLoaded = useCallback((name: string) => {
+    setLoaded((prev) => (prev[name] ? prev : { ...prev, [name]: true }));
   }, []);
 
   // The page the pager has landed on but not yet committed to Expo Router.
@@ -67,7 +69,7 @@ export function Pager(props: PagerProps) {
       // marking it loaded, so a lazy tab mounts with the right initial offset.
       // The header itself is never touched by the swipe.
       syncTabToHeader(route.name);
-      markLoaded(route.key);
+      markLoaded(route.name);
       // Record the pager's landed index so the provider's sync effect won't
       // re-animate the pager back to it.
       notifyPagerIndex(index);
@@ -100,15 +102,12 @@ export function Pager(props: PagerProps) {
 
   // Drive the continuous pager position on the UI thread.
   const { pagerPosition } = shared;
-  const pagerScrollHandler = usePagerScrollHandler(
-    {
-      onPageScroll: (event) => {
-        'worklet';
-        pagerPosition.value = event.position + event.offset;
-      },
+  const pagerScrollHandler = usePagerScrollHandler({
+    onPageScroll: (event) => {
+      'worklet';
+      pagerPosition.value = event.position + event.offset;
     },
-    [pagerPosition]
-  );
+  });
 
   return (
     <AnimatedPagerView
@@ -125,11 +124,13 @@ export function Pager(props: PagerProps) {
         const descriptor = descriptors[route.key];
         const isFocused = index === activeIndex;
         const isLazy = descriptor?.options?.lazy ?? true;
-        const shouldRender = !isLazy || isFocused || loaded[route.key];
+        const shouldRender = !isLazy || isFocused || loaded[route.name];
+        // The page is keyed by tab name so the native pager keeps a stable
+        // child when the route key changes; the screen itself follows the key.
         return (
-          <View key={route.key} style={styles.page} collapsable={false}>
+          <View key={route.name} style={styles.page} collapsable={false}>
             {shouldRender && descriptor ? (
-              <TabScreenContext.Provider value={{ name: route.name, index }}>
+              <TabScreenContext.Provider key={route.key} value={{ name: route.name, index }}>
                 {descriptor.render()}
               </TabScreenContext.Provider>
             ) : null}

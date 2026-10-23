@@ -20,6 +20,11 @@ export interface TabRouteDescriptor {
 export interface TabNavState {
   index: number;
   routes: { key: string; name: string }[];
+  /**
+   * Every route the navigator declares. From Expo Router 58, `routes` only
+   * holds tabs that have been focused or preloaded, so this can be longer.
+   */
+  routeNames?: string[];
 }
 
 export interface RouterStateValue {
@@ -27,7 +32,7 @@ export interface RouterStateValue {
   descriptors: Record<string, TabRouteDescriptor>;
   /** Switch to a tab by name via Expo Router. */
   switchTab: (name: TabName) => void;
-  /** Resolve a tab's router index + focus, if registered. */
+  /** Resolve a tab's declaration-order index + focus, if registered. */
   getTrigger: (name: TabName) => { index: number; isFocused: boolean } | undefined;
 }
 

@@ -162,7 +162,10 @@ export interface IndicatorProps {
 
 /** Options accepted by `<Tabs />` / `<Tabs.Provider />`. */
 export interface TabsProviderOptions {
-  /** Route name that should be focused first. */
+  /**
+   * Route name that should be focused first. Expo Router 58+ ignores this and
+   * reads `unstable_settings.anchor` from the layout instead.
+   */
   initialRouteName?: TabName;
   /** Minimum collapsed header height in px (header never collapses past this). */
   minHeaderHeight?: number;

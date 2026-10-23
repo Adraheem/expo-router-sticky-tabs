@@ -44,6 +44,33 @@ describe('orderStateByScreens', () => {
     expect(ordered.index).toBe(0);
   });
 
+  it('adds name-keyed placeholders for declared tabs the router has not created yet', () => {
+    // Expo Router 58+ only creates the focused tab's route up front; the rest
+    // are listed in `routeNames` until they are focused or preloaded.
+    const routerState = {
+      index: 0,
+      routes: routes('reels'),
+      routeNames: ['posts', 'reels', 'tagged'],
+    };
+
+    const ordered = orderStateByScreens(routerState, ['posts', 'reels', 'tagged']);
+
+    expect(ordered.routes).toEqual([
+      { key: 'posts', name: 'posts' },
+      { key: 'reels-key', name: 'reels' },
+      { key: 'tagged', name: 'tagged' },
+    ]);
+    expect(ordered.index).toBe(1);
+  });
+
+  it('does not add placeholders for declared tabs the router does not know', () => {
+    const routerState = { index: 0, routes: routes('posts'), routeNames: ['posts'] };
+
+    const ordered = orderStateByScreens(routerState, ['posts', 'missing']);
+
+    expect(ordered.routes.map((r) => r.name)).toEqual(['posts']);
+  });
+
   it('falls back safely when the declaration order is empty (first render)', () => {
     const routerState = { index: 1, routes: routes('posts', 'reels') };
     const ordered = orderStateByScreens(routerState, []);

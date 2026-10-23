@@ -51,7 +51,7 @@ export function useCollapsibleHeader(): CollapsibleHeader {
         },
       ],
     };
-  }, [collapsible]);
+  });
 
   const parallaxStyle = useAnimatedStyle(() => {
     if (reducedMotion.value === 1) {
@@ -64,7 +64,7 @@ export function useCollapsibleHeader(): CollapsibleHeader {
       return { opacity: 1 - p * 0.85, transform: [{ translateY: drift }, { scale: 1 }] };
     }
     return { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] };
-  }, [parallax]);
+  });
 
   return { translateStyle, parallaxStyle, progress, config };
 }

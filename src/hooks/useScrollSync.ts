@@ -67,26 +67,23 @@ export function useScrollSync(): ScrollSync {
   const anchor = useSharedValue(0);
   const animatedRef = useAnimatedRef<Component>();
 
-  const scrollHandler = useAnimatedScrollHandler(
-    {
-      onScroll: (event) => {
-        'worklet';
-        const y = event.contentOffset.y;
-        lastOffset.value = y;
-        if (activeIndex.value === index) {
-          // Genuine vertical scroll of the focused tab — the single source of
-          // change for the shared header. Anchored delta, then re-derive the
-          // anchor: unchanged mid-range, follows y at the expanded bound,
-          // locks to 0 (canonical absolute mode) once fully collapsed.
-          const distance = collapsibleDistance(headerHeight.value, minHeaderHeight.value);
-          const next = clamp(y - anchor.value, 0, distance);
-          headerOffset.value = next;
-          anchor.value = collapseAnchor(y, next, distance);
-        }
-      },
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      'worklet';
+      const y = event.contentOffset.y;
+      lastOffset.value = y;
+      if (activeIndex.value === index) {
+        // Genuine vertical scroll of the focused tab — the single source of
+        // change for the shared header. Anchored delta, then re-derive the
+        // anchor: unchanged mid-range, follows y at the expanded bound,
+        // locks to 0 (canonical absolute mode) once fully collapsed.
+        const distance = collapsibleDistance(headerHeight.value, minHeaderHeight.value);
+        const next = clamp(y - anchor.value, 0, distance);
+        headerOffset.value = next;
+        anchor.value = collapseAnchor(y, next, distance);
+      }
     },
-    [index]
-  );
+  });
 
   const scrollToOffset = useCallback(
     (offset: number, animated = false) => {

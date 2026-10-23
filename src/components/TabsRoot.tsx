@@ -1,5 +1,5 @@
 import { useTabsWithTriggers, useTabTrigger } from 'expo-router/ui';
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, type ReactNode } from 'react';
 
 import { TabsProvider } from '../provider/TabsProvider';
 import type { RouterStateValue, TabNavState, TabRouteDescriptor } from '../provider/routerState';
@@ -29,10 +29,17 @@ export function TabsRoot(props: TabsRootProps): ReactNode {
     [triggerSignature]
   );
 
-  const { NavigationContent, state, descriptors } = useTabsWithTriggers({
+  // Expo Router 58+ takes the initial route from the layout's
+  // `unstable_settings.anchor` and ignores this option; older
+  // versions still read it.
+  const { NavigationContent, state, descriptors, navigation } = useTabsWithTriggers({
     triggers,
     ...(options.initialRouteName ? { initialRouteName: options.initialRouteName } : {}),
   });
+  const preload = useCallback(
+    (name: string, params?: object) => navigation.preload(name, params),
+    [navigation]
+  );
 
   return (
     <NavigationContent>
@@ -40,6 +47,7 @@ export function TabsRoot(props: TabsRootProps): ReactNode {
         screens={screens}
         state={state as unknown as TabNavState}
         descriptors={descriptors as unknown as Record<string, TabRouteDescriptor>}
+        preload={preload}
         options={options}>
         {layoutChildren}
       </TabsInner>
@@ -51,6 +59,8 @@ interface TabsInnerProps {
   screens: RegisteredTab[];
   state: TabNavState;
   descriptors: Record<string, TabRouteDescriptor>;
+  /** Adds a tab's route to the router state without focusing it. */
+  preload: (name: string, params?: object) => void;
   options: TabsProviderOptions;
   children: ReactNode;
 }
@@ -59,7 +69,14 @@ interface TabsInnerProps {
  * Rendered inside `NavigationContent` so `useTabTrigger` has the navigator
  * context it needs to switch tabs + read per-tab focus.
  */
-function TabsInner({ screens, state, descriptors, options, children }: TabsInnerProps): ReactNode {
+function TabsInner({
+  screens,
+  state,
+  descriptors,
+  preload,
+  options,
+  children,
+}: TabsInnerProps): ReactNode {
   const activeName = state.routes[state.index]?.name ?? screens[0]?.name ?? '';
   const { switchTab, getTrigger } = useTabTrigger({ name: activeName });
 
@@ -69,23 +86,33 @@ function TabsInner({ screens, state, descriptors, options, children }: TabsInner
   // whole animated layer downstream — pager pages, indicator, tab focus —
   // shares a single, consistent index space. Router still owns navigation.
   const orderSignature = screens.map((s) => s.name).join('|');
-  const orderedState = useMemo(
-    () =>
-      orderStateByScreens(
-        state,
-        screens.map((s) => s.name)
-      ),
+  const screenNames = useMemo(() => screens.map((s) => s.name), [orderSignature]);
+  const orderedState = useMemo(() => orderStateByScreens(state, screenNames), [state, screenNames]);
 
-    [state, orderSignature]
-  );
+  // Expo Router 58+ only creates a tab's route the first time it is focused,
+  // so an unvisited tab renders nothing. The pager reveals neighbouring pages
+  // mid-swipe (and mounts non-lazy ones up front), so preload every missing
+  // tab into the router state. Preloading never changes focus or the URL. On
+  // older versions every tab route already exists and this is a no-op.
+  const missingSignature = (state.routeNames ?? [])
+    .filter((name) => !state.routes.some((r) => r.name === name))
+    .join('|');
+  useEffect(() => {
+    if (!missingSignature) return;
+    for (const name of missingSignature.split('|')) {
+      const trigger = getTrigger(name);
+      preload(name, trigger?.type === 'internal' ? trigger.action.payload.params : undefined);
+    }
+  }, [missingSignature, getTrigger, preload]);
 
   const routerSwitchTab = useCallback((name: TabName) => switchTab(name, {}), [switchTab]);
   const routerGetTrigger = useCallback<RouterStateValue['getTrigger']>(
     (name) => {
       const trigger = getTrigger(name);
-      return trigger ? { index: trigger.index, isFocused: trigger.isFocused } : undefined;
+      const index = screenNames.indexOf(name);
+      return trigger && index !== -1 ? { index, isFocused: trigger.isFocused } : undefined;
     },
-    [getTrigger]
+    [getTrigger, screenNames]
   );
 
   return (
