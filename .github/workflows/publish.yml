@@ -16,7 +16,8 @@ jobs:
         with:
           node-version: "24"
       - name: Install dependencies
-        run: npm ci
+        # Same peer resolution as ci.yml — the lockfile has known peer conflicts.
+        run: npm ci --legacy-peer-deps
 
       - name: Run tests
         run: npm test
