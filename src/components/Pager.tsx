@@ -5,11 +5,13 @@ import PagerView, {
   type PageScrollStateChangedNativeEvent,
 } from 'react-native-pager-view';
 import Animated from 'react-native-reanimated';
+import { useStore } from 'zustand';
 
 import { usePagerScrollHandler } from '../hooks/usePagerScrollHandler';
 import { useTabsContext } from '../provider/context';
 import { useRouterState } from '../provider/routerState';
 import { TabScreenContext } from '../provider/screenContext';
+import { shouldRenderPage } from '../utils/pageMount';
 
 const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
 
@@ -30,8 +32,12 @@ export interface PagerProps {
  */
 export function Pager(props: PagerProps) {
   const { style, swipeEnabled = true, overdrag = false } = props;
-  const { shared, registerPager, notifyPagerIndex, pagerStore, syncTabToHeader } = useTabsContext();
+  const { shared, registerPager, notifyPagerIndex, pagerStore, tabStore, syncTabToHeader } =
+    useTabsContext();
   const { state, descriptors, switchTab } = useRouterState();
+  // The `<Tabs.Screen>` declarations, keyed by tab name — the source of each
+  // page's `lazy` flag.
+  const tabs = useStore(tabStore, (s) => s.tabs);
 
   const pagerRef = useRef<ComponentRef<typeof PagerView>>(null);
   const routes = state.routes;
@@ -122,9 +128,10 @@ export function Pager(props: PagerProps) {
       onPageScrollStateChanged={onPageScrollStateChanged}>
       {routes.map((route, index) => {
         const descriptor = descriptors[route.key];
-        const isFocused = index === activeIndex;
-        const isLazy = descriptor?.options?.lazy ?? true;
-        const shouldRender = !isLazy || isFocused || loaded[route.name];
+        const shouldRender = shouldRenderPage(tabs[route.name], {
+          isFocused: index === activeIndex,
+          loaded: Boolean(loaded[route.name]),
+        });
         // The page is keyed by tab name so the native pager keeps a stable
         // child when the route key changes; the screen itself follows the key.
         return (
