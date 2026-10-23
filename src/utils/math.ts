@@ -128,3 +128,29 @@ export function indicatorWidth(position: number, layouts: TabLayout[]): number {
   }
   return interpolatePosition(position, widths, 0);
 }
+
+/**
+ * Horizontal scroll offset that keeps the tab at a continuous pager position
+ * centred in a scrolling tab bar.
+ *
+ * `layouts` are relative to the tab row, which starts `insetLeft` into the
+ * scroll content. The tab is centred within the safe part of the viewport
+ * (between the two insets) and the result is clamped to the scrollable range,
+ * so it is `0` whenever the tabs fit.
+ */
+export function tabBarScrollOffset(
+  position: number,
+  layouts: TabLayout[],
+  viewportWidth: number,
+  contentWidth: number,
+  insetLeft: number,
+  insetRight: number
+): number {
+  'worklet';
+  const maxOffset = Math.max(0, contentWidth - viewportWidth);
+  if (maxOffset === 0 || layouts.length === 0) return 0;
+  const tabCenter =
+    insetLeft + indicatorX(position, layouts) + indicatorWidth(position, layouts) / 2;
+  const safeCenter = insetLeft + (viewportWidth - insetLeft - insetRight) / 2;
+  return clamp(tabCenter - safeCenter, 0, maxOffset);
+}

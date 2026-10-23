@@ -34,7 +34,7 @@ behind the collapse). This is why switching tabs never expands, collapses or rep
 | `provider/screenContext` | Per-page `{ name, index }` so list wrappers know their tab. |
 | `components/Pager` | The pager host, always rendered by `<Tabs>`: maps `state.routes → descriptors[key].render()`, drives `pagerPosition`, syncs swipe → router. |
 | `components/Header` | Measures itself, applies the collapse transform + parallax/safe-area. |
-| `components/TabBar` | Renders triggers, measures tab layouts into `tabLayouts`, sticks via the shared transform, hosts the `Indicator`. |
+| `components/TabBar` | Renders triggers, measures tab layouts into `tabLayouts`, sticks via the shared transform, hosts the `Indicator`. Insets the tabs by the left/right safe area the band overlaps (`hooks/useHorizontalSafeArea`), scrolls only when the tabs overflow, and keeps the active tab centred while scrolling. |
 | `components/Indicator` | Interpolates x/width/colour from `pagerPosition` + `tabLayouts` on the UI thread. |
 | `lists/*` | Drop-in list wrappers over the reanimated animated components + `useScrollSync`. |
 | `hooks/useScrollSync` | The **only** writer of `headerOffset`: the focused tab's genuine vertical scroll drives the collapse; every tab records its own offset + seeds its initial `contentOffset` from the current collapse. |
@@ -42,6 +42,7 @@ behind the collapse). This is why switching tabs never expands, collapses or rep
 | `hooks/useCollapsibleHeader` | Derives the header/tab-bar transform + collapse progress from `headerOffset` (shared layout state), never from a per-tab offset. |
 | `stores/*` | Four isolated zustand stores (tab / pager / header / scroll). |
 | `utils/math` | Pure, worklet-safe collapse + interpolation math (unit tested). |
+| `utils/safeArea` | Pure overlap of a measured span with the provider's left/right safe-area insets (unit tested). |
 
 ## Data flow
 

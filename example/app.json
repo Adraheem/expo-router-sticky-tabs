@@ -4,7 +4,7 @@
     "slug": "expo-router-sticky-tabs-example",
     "version": "1.0.0",
     "scheme": "stickytabs",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {

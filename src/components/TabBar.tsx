@@ -7,14 +7,23 @@ import {
   type LayoutChangeEvent,
   type ColorValue,
 } from 'react-native';
-import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  interpolateColor,
+  scrollTo,
+  useAnimatedReaction,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useStore } from 'zustand';
 
+import { Indicator } from './Indicator';
 import { useCollapsibleHeader } from '../hooks/useCollapsibleHeader';
+import { useHorizontalSafeArea } from '../hooks/useHorizontalSafeArea';
 import { useTabsContext } from '../provider/context';
 import { useRouterState } from '../provider/routerState';
 import type { RegisteredTab, TabBarProps, TabLayout } from '../types';
-import { Indicator } from './Indicator';
+import { tabBarScrollOffset } from '../utils/math';
 
 const DEFAULT_ACTIVE: ColorValue = '#000';
 const DEFAULT_INACTIVE: ColorValue = '#8e8e8e';
@@ -23,11 +32,17 @@ const DEFAULT_INACTIVE: ColorValue = '#8e8e8e';
  * `<Tabs.TabBar />` — the sticky, swipe-aware tab strip. It measures each tab's
  * geometry into a shared value (so the indicator can interpolate), sticks to
  * the top once the header collapses, and delegates presses to Expo Router.
+ *
+ * The band spans the full width, into the safe area; only the tabs are inset,
+ * by however far the band reaches into the left/right insets. By default the
+ * tabs fill the band and scroll once they no longer fit; `scrollable={false}`
+ * crams them into the available width instead.
  */
 export function TabBar(props: TabBarProps): ReactNode {
   const {
-    scrollable = false,
+    scrollable = true,
     fixed = false,
+    safeArea = true,
     style,
     contentContainerStyle,
     tabStyle,
@@ -45,6 +60,7 @@ export function TabBar(props: TabBarProps): ReactNode {
   const order = useStore(tabStore, (s) => s.order);
   const tabsMap = useStore(tabStore, (s) => s.tabs);
   const { translateStyle } = useCollapsibleHeader();
+  const { ref: bandRef, onLayout: onBandLayout, insets } = useHorizontalSafeArea(safeArea);
 
   const headerHeight = useStore(headerStore, (s) => s.headerHeight);
 
@@ -73,7 +89,35 @@ export function TabBar(props: TabBarProps): ReactNode {
 
   const isScrollable = scrollable && !fixed;
 
+  // Keep the active tab in view: follow the pager on the UI thread and centre
+  // the tab within the safe part of the bar. This only runs when the pager or
+  // the geometry changes, so it never fights the user dragging the bar itself.
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const viewportWidth = useSharedValue(0);
+  const contentWidth = useSharedValue(0);
+  const { pagerPosition, activeIndex, tabLayouts, reducedMotion } = shared;
+  const insetLeft = insets.left;
+  const insetRight = insets.right;
+  useAnimatedReaction(
+    () => {
+      const position = reducedMotion.value === 1 ? activeIndex.value : pagerPosition.value;
+      return tabBarScrollOffset(
+        position,
+        tabLayouts.value,
+        viewportWidth.value,
+        contentWidth.value,
+        insetLeft,
+        insetRight
+      );
+    },
+    (offset, previous) => {
+      if (!isScrollable || offset === previous) return;
+      scrollTo(scrollRef, offset, 0, false);
+    }
+  );
+
   const tabs = order.map((name) => tabsMap[name]).filter((t): t is RegisteredTab => Boolean(t));
+  const tabSizeStyle = isScrollable ? styles.tabGrow : styles.flex;
 
   const content = (
     <View
@@ -95,7 +139,7 @@ export function TabBar(props: TabBarProps): ReactNode {
             <View
               key={tab.name}
               onLayout={(e) => setTabLayout(tab.index, e.nativeEvent.layout)}
-              style={!isScrollable && styles.flex}>
+              style={tabSizeStyle}>
               {renderTab({
                 tab,
                 isFocused,
@@ -118,12 +162,7 @@ export function TabBar(props: TabBarProps): ReactNode {
             accessibilityRole="tab"
             accessibilityState={accessibilityState}
             accessibilityLabel={tab.options.title}
-            style={[
-              styles.tab,
-              !isScrollable && styles.flex,
-              tab.disabled && styles.disabled,
-              tabStyle,
-            ]}>
+            style={[styles.tab, tabSizeStyle, tab.disabled && styles.disabled, tabStyle]}>
             <TabContent
               tab={tab}
               isFocused={isFocused}
@@ -142,21 +181,36 @@ export function TabBar(props: TabBarProps): ReactNode {
     </View>
   );
 
+  const insetStyle = { paddingLeft: insets.left, paddingRight: insets.right };
+
   return (
     <Animated.View
       onLayout={onBarLayout}
       accessibilityRole="tablist"
       style={[styles.bar, { top: headerHeight }, translateStyle, style]}>
-      {isScrollable ? (
-        <Animated.ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}>
-          {content}
-        </Animated.ScrollView>
-      ) : (
-        content
-      )}
+      <View ref={bandRef} onLayout={onBandLayout} collapsable={false}>
+        {isScrollable ? (
+          // The scroller spans the whole band and only its content is inset, so
+          // the first/last tabs rest inside the safe area but can slide under
+          // the insets mid-scroll.
+          <Animated.ScrollView
+            ref={scrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            alwaysBounceHorizontal={false}
+            onLayout={(e) => {
+              viewportWidth.value = e.nativeEvent.layout.width;
+            }}
+            onContentSizeChange={(width) => {
+              contentWidth.value = width;
+            }}
+            contentContainerStyle={[styles.scrollContent, insetStyle]}>
+            {content}
+          </Animated.ScrollView>
+        ) : (
+          <View style={insetStyle}>{content}</View>
+        )}
+      </View>
     </Animated.View>
   );
 }
@@ -224,16 +278,21 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1 },
   row: { flexDirection: 'row', position: 'relative' },
   rowFixed: { flex: 1 },
-  rowScroll: {},
+  rowScroll: { flexGrow: 1 },
   flex: { flex: 1 },
+  // Natural width plus an equal share of any leftover space; never shrinks, so
+  // tabs that don't fit overflow the row and the bar scrolls.
+  tabGrow: { flexGrow: 1, flexShrink: 0 },
   tab: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tabContent: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  label: { fontSize: 14, fontWeight: '600' },
+  // `maxWidth` + a shrinking label let crammed tabs ellipsize instead of
+  // overflowing into their neighbours.
+  tabContent: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '100%' },
+  label: { fontSize: 14, fontWeight: '600', flexShrink: 1 },
   disabled: { opacity: 0.4 },
   badge: {
     minWidth: 18,
