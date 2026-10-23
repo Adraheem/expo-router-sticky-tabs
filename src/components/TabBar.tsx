@@ -192,7 +192,7 @@ function TabContent({
         [String(inactiveColor), String(activeColor), String(inactiveColor)]
       ),
     };
-  }, [tab.index, activeColor, inactiveColor]);
+  });
 
   // Icons are arbitrary components that take a plain colour, so they still use
   // the discrete focused state.

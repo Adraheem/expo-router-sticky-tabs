@@ -5,6 +5,10 @@ import { ProfileHeader } from '../../components/ProfileHeader';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Expo Router 58+ reads the tabs' initial route from here; `<Tabs initialRouteName>`
+// only applies on older versions.
+export const unstable_settings = { anchor: 'posts' };
+
 /**
  * The profile is a normal Expo Router layout route. `<Tabs>` adds the sticky
  * collapsible header, swipeable pager and synced scrolling on top — Expo Router

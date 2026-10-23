@@ -16,11 +16,18 @@ import type { TabNavState } from '../provider/routerState';
  * (matched here by name) and for URLs/deep links; we only reconcile ordering.
  * Routes the router knows about but that were not declared as screens are
  * dropped, keeping the pager pages aligned 1:1 with the tabs.
+ *
+ * From Expo Router 58 a tab's route is only created once it is first focused
+ * (or preloaded), so a declared tab can be in `state.routeNames` without a
+ * route yet. It gets a placeholder keyed by its name — the same key Expo
+ * Router uses for that tab's placeholder descriptor — so the pager still has
+ * one page per tab from the very first render.
  */
 export function orderStateByScreens(state: TabNavState, order: readonly string[]): TabNavState {
   const routeByName = new Map(state.routes.map((r) => [r.name, r]));
+  const knownNames = new Set(state.routeNames);
   const routes = order
-    .map((name) => routeByName.get(name))
+    .map((name) => routeByName.get(name) ?? (knownNames.has(name) ? { key: name, name } : null))
     .filter((r): r is TabNavState['routes'][number] => Boolean(r));
   const activeName = state.routes[state.index]?.name;
   const index = Math.max(

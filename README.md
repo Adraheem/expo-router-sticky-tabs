@@ -135,7 +135,7 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | Prop | Default | Description |
 | --- | --- | --- |
 | `children` | — | Layout children plus `<Tabs.Screen>` declarations. |
-| `initialRouteName` | First registered tab | The tab to focus initially. |
+| `initialRouteName` | First registered tab | The tab to focus initially. On Expo SDK 58+, Expo Router ignores this and reads `unstable_settings.anchor` from the layout instead. |
 | `minHeaderHeight` | `0` | Minimum collapsed header height in px. |
 | `disableAnimation` | `false` | Disables animated transitions and also applies under Reduce Motion. |
 | `swipeEnabled` | `true` | Allow swiping between tabs (the pager is rendered automatically). |
@@ -331,7 +331,7 @@ npx expo start
 
 | | Version |
 |---|---|
-| Expo SDK | 54+ (built and tested on 57) |
+| Expo SDK | 54+ (built and tested on 58) |
 | React | 19 |
 | React Native | 0.79+ (New Architecture / Fabric / Hermes) |
 | expo-router | 3.5+ |

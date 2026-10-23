@@ -6,13 +6,17 @@ import {
   type ReactElement,
   type Ref,
 } from 'react';
-import { SectionList, type SectionListProps, type DefaultSectionT } from 'react-native';
+import { SectionList, type SectionListProps } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useScrollSync } from '../hooks/useScrollSync';
 import { useIsInsideTabScreen } from '../provider/screenContext';
 import { toAnimatedComponent } from '../utils/animatedComponent';
 import { mergeRefs } from '../utils/mergeRefs';
+
+// React Native's default `SectionT`. RN 0.88's generated types no longer
+// export `DefaultSectionT`, so mirror its shape here.
+type DefaultSectionT = { [key: string]: any };
 
 export type TabsSectionListProps<ItemT, SectionT = DefaultSectionT> = SectionListProps<
   ItemT,

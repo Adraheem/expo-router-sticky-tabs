@@ -28,7 +28,7 @@ export function Indicator(props: IndicatorProps): ReactNode {
     return spring
       ? withSpring(activeIndex.value, { damping: 20, stiffness: 200 })
       : pagerPosition.value;
-  }, [spring]);
+  });
 
   const animatedStyle = useAnimatedStyle(() => {
     const layouts = tabLayouts.value;
@@ -52,7 +52,7 @@ export function Indicator(props: IndicatorProps): ReactNode {
       };
     }
     return base;
-  }, [interpolateWidth, colors]);
+  });
 
   if (children) {
     return children({ animatedStyle: animatedStyle as unknown as StyleProp<ViewStyle> });

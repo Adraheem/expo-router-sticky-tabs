@@ -23,6 +23,8 @@ So we do exactly what `TabSlot` does — but instead of stacking screens with `d
 - Tab switching goes through `useTabTrigger().switchTab(name)` (which calls `router.navigate` / dispatches `JUMP_TO`).
 - The pager position is a Reanimated shared value; `state.index` drives the pager, and swipe-settle calls `switchTab` back into the router.
 
+**SDK 58 update.** Expo Router 58 creates a tab's route lazily, the first time it is focused, so `state.routes` can be shorter than `state.routeNames` and unvisited tabs only have placeholder descriptors that render nothing. `<Tabs>` fills the gaps with name-keyed placeholder pages on the first render (so the pager's page count and `initialPage` are right immediately) and then preloads the missing routes via `navigation.preload`, which adds them to the state without changing focus or the URL. Pages are keyed by tab name so a placeholder becoming a real route does not remount the native page.
+
 The result: **only the internal pager and the router-sync effect touch Expo Router internals.** Everything else (header, tab bar, indicator, lists, stores, hooks) is independent. If a future Expo Router release changes the headless API, the blast radius is one file.
 
 ## Reuse vs. build

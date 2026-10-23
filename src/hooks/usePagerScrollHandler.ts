@@ -15,11 +15,12 @@ interface Handlers {
  * pager position drives shared values on the UI thread with no bridge hops.
  *
  * Mirrors the pattern documented by `react-native-pager-view` for Reanimated.
+ * No dependency list: on native Reanimated tracks the handlers' closures
+ * itself (and warns about explicit dependencies from 4.7).
  */
-export function usePagerScrollHandler(handlers: Handlers, dependencies?: unknown[]) {
+export function usePagerScrollHandler(handlers: Handlers) {
   const { doDependenciesDiffer } = useHandler(
-    handlers as unknown as Record<string, (e: unknown, c: unknown) => void>,
-    dependencies
+    handlers as unknown as Record<string, (e: unknown, c: unknown) => void>
   );
 
   return useEvent(
