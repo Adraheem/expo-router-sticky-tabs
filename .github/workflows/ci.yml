@@ -19,8 +19,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # zustand + React 19 require legacy peer resolution.
-        run: npm install --legacy-peer-deps --no-audit --no-fund
+        run: npm ci
 
       - name: Lint
         run: npm run lint -- --max-warnings 0
