@@ -180,8 +180,9 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 
 | Prop | Default | Description |
 | --- | --- | --- |
-| `scrollable` | `false` | Allows horizontal scrolling when there are many tabs. |
-| `fixed` | `false` | Forces even-width, non-scrolling tabs. |
+| `scrollable` | `true` | Tabs fill the available width and scroll horizontally only once they no longer fit. `false` crams every tab into the available width (equal widths, labels truncate). |
+| `fixed` | `false` | **Deprecated** — use `scrollable={false}`. |
+| `safeArea` | `true` | Insets the tabs by the part of the left/right safe area the bar overlaps. The band itself still spans the full width. |
 | `style` | — | Bar container style. |
 | `contentContainerStyle` | — | Inner row/scroll container style. |
 | `tabStyle` | — | Style applied to each tab button. |
@@ -192,6 +193,12 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 | `showIndicator` | `true` | Shows the built-in indicator. |
 | `renderTab` | — | Fully custom tab renderer. |
 | `renderIndicator` | — | Fully custom indicator renderer. |
+
+#### Safe areas
+
+The tab bar handles the **left/right** safe area for you: the band (background) stays edge to edge, while the tabs rest inside the insets the bar actually reaches into — landscape notches and Dynamic Islands, foldable postures, rounded corners. A bar the consumer already placed inside the safe area gets no extra padding.
+
+Everything else is yours: pad the header content and your lists by `useSafeAreaInsets()`, and if the bar can stick to the very top of the screen, keep it below the status bar with a fixed header above `<Tabs>` or a `minHeaderHeight` that covers `insets.top`.
 
 ### `<Tabs.Indicator>`
 

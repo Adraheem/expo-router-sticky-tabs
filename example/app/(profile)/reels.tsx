@@ -1,14 +1,17 @@
 import { Tabs } from 'expo-router-sticky-tabs';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DATA = Array.from({ length: 24 }, (_, i) => i);
 
 export default function Reels() {
+  const { left, right } = useSafeAreaInsets();
+
   return (
     <Tabs.FlatList
       data={DATA}
       keyExtractor={(i) => `reel-${i}`}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingLeft: 12 + left, paddingRight: 12 + right }]}
       renderItem={({ item }) => (
         <View style={[styles.card, { backgroundColor: `hsl(${(item * 37) % 360} 45% 30%)` }]}>
           <Text style={styles.play}>▷</Text>

@@ -114,10 +114,24 @@ export interface HeaderProps extends Partial<HeaderConfig> {
 }
 
 export interface TabBarProps {
-  /** When `true` the bar scrolls horizontally; when `false` tabs share width. */
+  /**
+   * When `true` the tabs fill the available width and the bar scrolls
+   * horizontally only once they no longer fit. When `false` every tab is
+   * crammed into the available width (equal widths, labels truncate).
+   * Default `true`.
+   */
   scrollable?: boolean;
-  /** Force equal-width, non-scrolling tabs. Overrides `scrollable`. */
+  /**
+   * Force equal-width, non-scrolling tabs. Overrides `scrollable`.
+   * @deprecated Use `scrollable={false}`.
+   */
   fixed?: boolean;
+  /**
+   * Inset the tabs (not the band, which always spans the full width) by the
+   * part of the left/right safe-area insets the bar overlaps. The top inset,
+   * and the header and content insets, stay with the consumer. Default `true`.
+   */
+  safeArea?: boolean;
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   tabStyle?: StyleProp<ViewStyle>;

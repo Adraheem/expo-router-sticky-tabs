@@ -9,13 +9,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // only applies on older versions.
 export const unstable_settings = { anchor: 'posts' };
 
+// The tab bar scrolls once its tabs no longer fit the safe width. Flip this to
+// `false` to cram every tab into the available width instead.
+const SCROLLABLE = true;
+
 /**
  * The profile is a normal Expo Router layout route. `<Tabs>` adds the sticky
  * collapsible header, swipeable pager and synced scrolling on top — Expo Router
- * still owns the routes (`/posts`, `/reels`, `/tagged`), URLs and deep links.
+ * still owns the routes (`/posts`, `/reels`, `/tagged`, …), URLs and deep links.
+ *
+ * The tab bar keeps its own tabs inside the left/right safe area; the header and
+ * the screens' content handle their own insets.
  */
 export default function ProfileLayout() {
-  const { top } = useSafeAreaInsets();
+  const { top, left, right } = useSafeAreaInsets();
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -23,7 +30,8 @@ export default function ProfileLayout() {
         style={{
           paddingTop: top,
           paddingBottom: 8,
-          paddingHorizontal: 16,
+          paddingLeft: 16 + left,
+          paddingRight: 16 + right,
           backgroundColor: 'white',
           zIndex: 10,
         }}>
@@ -31,10 +39,12 @@ export default function ProfileLayout() {
       </View>
       <Tabs initialRouteName="posts">
         <Tabs.Header collapsible sticky safeArea={false} parallax={false}>
-          <ProfileHeader />
+          <View style={{ paddingLeft: left, paddingRight: right, backgroundColor: 'white' }}>
+            <ProfileHeader />
+          </View>
         </Tabs.Header>
 
-        <Tabs.TabBar />
+        <Tabs.TabBar scrollable={SCROLLABLE} />
 
         <Tabs.Screen
           name="posts"
@@ -54,6 +64,9 @@ export default function ProfileLayout() {
           options={{ title: 'Tagged', icon: TaggedIcon }}
           lazy={false}
         />
+        <Tabs.Screen name="saved" href="/saved" options={{ title: 'Saved' }} />
+        <Tabs.Screen name="highlights" href="/highlights" options={{ title: 'Highlights' }} />
+        <Tabs.Screen name="mentions" href="/mentions" options={{ title: 'Mentions' }} />
       </Tabs>
     </View>
   );

@@ -1,18 +1,20 @@
 import { Tabs } from 'expo-router-sticky-tabs';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const DATA = Array.from({ length: 60 }, (_, i) => i);
 
 export default function Posts() {
   const { width } = useWindowDimensions();
-  const size = width / 3;
+  const { left, right } = useSafeAreaInsets();
+  const size = (width - left - right) / 3;
 
   return (
     <Tabs.FlatList
       data={DATA}
       keyExtractor={(i) => `post-${i}`}
       numColumns={3}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingLeft: left, paddingRight: right }]}
       renderItem={({ item }) => (
         <View
           style={[

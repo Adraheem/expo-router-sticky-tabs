@@ -8,6 +8,7 @@ import {
   indicatorX,
   interpolatePosition,
   syncedTabOffset,
+  tabBarScrollOffset,
 } from '../utils/math';
 
 describe('clamp', () => {
@@ -202,5 +203,41 @@ describe('indicator interpolation', () => {
     expect(() => indicatorWidth(1, partial)).not.toThrow();
     expect(indicatorX(2, partial)).toBe(220);
     expect(indicatorWidth(2, partial)).toBe(80);
+  });
+});
+
+describe('tabBarScrollOffset', () => {
+  // Five 100pt tabs: a 500pt row in a 300pt viewport.
+  const layouts = [0, 100, 200, 300, 400].map((x) => ({ x, width: 100 }));
+
+  it('is 0 when the tabs fit', () => {
+    expect(tabBarScrollOffset(4, layouts, 600, 500, 0, 0)).toBe(0);
+    expect(tabBarScrollOffset(4, layouts, 500, 500, 0, 0)).toBe(0);
+  });
+  it('is 0 with no measurements', () => {
+    expect(tabBarScrollOffset(2, [], 300, 500, 0, 0)).toBe(0);
+  });
+  it('clamps the first and last tabs to the ends of the scroll range', () => {
+    expect(tabBarScrollOffset(0, layouts, 300, 500, 0, 0)).toBe(0);
+    expect(tabBarScrollOffset(4, layouts, 300, 500, 0, 0)).toBe(200);
+  });
+  it('centres a middle tab in the viewport', () => {
+    // Tab 2 centre (250) − viewport centre (150).
+    expect(tabBarScrollOffset(2, layouts, 300, 500, 0, 0)).toBe(100);
+  });
+  it('follows a fractional pager position', () => {
+    // Halfway between tabs 1 and 2: centre 200.
+    expect(tabBarScrollOffset(1.5, layouts, 300, 500, 0, 0)).toBe(50);
+  });
+  it('centres within the safe part of the viewport', () => {
+    // Left inset 40: the row starts 40 into the content (540 wide), and the
+    // safe centre is 40 + (300 − 40) / 2 = 170. Tab 2 centre is 40 + 250.
+    expect(tabBarScrollOffset(2, layouts, 300, 540, 40, 0)).toBe(120);
+    // Right inset 60: safe centre (300 − 60) / 2 = 120; tab 2 centre 250.
+    expect(tabBarScrollOffset(2, layouts, 300, 560, 0, 60)).toBe(130);
+  });
+  it('lets the last tab rest just inside the right inset', () => {
+    // Max offset = 560 − 300 = 260 → last tab ends at 500 − 260 = 240 = 300 − 60.
+    expect(tabBarScrollOffset(4, layouts, 300, 560, 0, 60)).toBe(260);
   });
 });
