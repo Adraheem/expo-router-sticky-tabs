@@ -46,10 +46,55 @@ Building an Instagram/Threads/TikTok-style profile on Expo Router means reconcil
 - 🔄 **Per-tab scroll sync** — each tab keeps its own scroll position, header state and indicator, restored on return (just like Instagram).
 - 📜 **Drop-in list wrappers** — `Tabs.ScrollView`, `Tabs.FlatList`, `Tabs.SectionList`, `Tabs.FlashList`.
 - 🎯 **Animated indicator** — pager-offset interpolation, width + colour interpolation, spring, custom renderers.
+- 📐 **Safe-area aware tab bar** — tabs stay clear of notches, Dynamic Islands and foldable cutouts in every posture, and scroll (following the active tab) when they don't fit. See [foldables](#foldables--safe-areas).
 - ⚡ **Zero unnecessary re-renders** — separate zustand stores + shared values; the hot path never touches React state.
 - ♿ **Accessible** — tab/tablist roles, selected state, Reduce Motion support.
 - 🧩 **Strict TypeScript**, strong generics, no `any`, full IntelliSense.
 - 📱 iOS · Android · Expo Go · New Architecture · Fabric · Hermes · React 19.
+
+## Foldables & safe areas
+
+Recorded on the **iPhone Duo** simulator (iOS 27.1) running the [example app](./example). The tab bar's band always runs edge to edge, while the tabs keep clear of the camera and status cutouts in every posture: folded or unfolded, portrait or landscape, header expanded or collapsed. When the tabs don't fit they scroll, and the bar follows the active tab.
+
+<table>
+  <tr>
+    <th>Cover screen: tabs overflow and follow the pager</th>
+    <th>Inner screen: collapse, swipe, expand</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/assets/iphone-duo/folded-scroll.gif" width="260" alt="Folded iPhone Duo: swiping through six tabs scrolls the tab bar to keep the active tab visible, and the last tab rests just inside the right-hand sensor inset" /></td>
+    <td align="center"><img src="./docs/assets/iphone-duo/unfolded-collapse.gif" width="460" alt="Unfolded iPhone Duo in landscape: the header collapses into a sticky tab bar that stays left of the status column while swiping between tabs" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th>Folded · portrait</th>
+    <th>Folded · landscape</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/assets/iphone-duo/folded-portrait.png" width="220" alt="Folded iPhone Duo in portrait with the sensor on the right edge; the tabs scroll past it" /></td>
+    <td align="center"><img src="./docs/assets/iphone-duo/folded-landscape.png" width="320" alt="Folded iPhone Duo in landscape with the camera on the left; the tabs start after it" /></td>
+  </tr>
+  <tr>
+    <td>Sensor on the right edge (84pt inset). Six tabs overflow the 466pt screen and scroll; the last tab rests at the inset.</td>
+    <td>The camera moves to the left, so the tabs start past it. Rotating 180° flips the inset to the other side.</td>
+  </tr>
+  <tr>
+    <th>Unfolded · portrait</th>
+    <th>Unfolded · landscape</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="./docs/assets/iphone-duo/unfolded-portrait.png" width="240" alt="Unfolded iPhone Duo in portrait; the status bar is at the top and the tabs span the full width" /></td>
+    <td align="center"><img src="./docs/assets/iphone-duo/unfolded-landscape.png" width="340" alt="Unfolded iPhone Duo in landscape; the tabs stop short of the status column on the right" /></td>
+  </tr>
+  <tr>
+    <td>No side insets: the status bar sits at the top (the app's fixed header handles it), and all six tabs fit and fill the width.</td>
+    <td>The status column sits on the right (84pt inset). The tabs fill the remaining width; the band still runs underneath it.</td>
+  </tr>
+</table>
+
+The header and list content in these shots pad themselves with `useSafeAreaInsets()`. That part is the app's job; see [Safe areas](#safe-areas).
 
 ## Installation
 
@@ -196,7 +241,7 @@ That's it — scroll one tab, switch away and back: the offset, header collapse 
 
 #### Safe areas
 
-The tab bar handles the **left/right** safe area for you: the band (background) stays edge to edge, while the tabs rest inside the insets the bar actually reaches into — landscape notches and Dynamic Islands, foldable postures, rounded corners. A bar the consumer already placed inside the safe area gets no extra padding.
+The tab bar handles the **left/right** safe area for you: the band (background) stays edge to edge, while the tabs rest inside the insets the bar actually reaches into — landscape notches and Dynamic Islands, foldable postures, rounded corners. A bar the consumer already placed inside the safe area gets no extra padding. See it on a foldable in [Foldables & safe areas](#foldables--safe-areas).
 
 Everything else is yours: pad the header content and your lists by `useSafeAreaInsets()`, and if the bar can stick to the very top of the screen, keep it below the status bar with a fixed header above `<Tabs>` or a `minHeaderHeight` that covers `insets.top`.
 
