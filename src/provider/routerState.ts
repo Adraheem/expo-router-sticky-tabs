@@ -10,7 +10,6 @@ import type { TabName } from '../types';
 export interface TabRouteDescriptor {
   render: () => ReactElement;
   options: {
-    lazy?: boolean;
     freezeOnBlur?: boolean;
     unmountOnBlur?: boolean;
   };

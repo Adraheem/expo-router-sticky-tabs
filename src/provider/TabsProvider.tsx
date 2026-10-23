@@ -109,7 +109,9 @@ export function TabsProvider(props: TabsProviderProps): ReactNode {
 
   // ---- Register screens into the tab store. -------------------------------
   const screensSignature = screens
-    .map((s) => `${s.name}:${s.options.title}:${String(s.options.badge ?? '')}:${s.disabled}`)
+    .map(
+      (s) => `${s.name}:${s.options.title}:${String(s.options.badge ?? '')}:${s.disabled}:${s.lazy}`
+    )
     .join('|');
   useEffect(() => {
     // screens are re-derived every render; the signature captures real changes.
